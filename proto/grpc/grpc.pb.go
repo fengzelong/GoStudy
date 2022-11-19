@@ -30,6 +30,7 @@ type HelloRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Sex  string `protobuf:"bytes,2,opt,name=sex,proto3" json:"sex,omitempty"`
 }
 
 func (x *HelloRequest) Reset() {
@@ -67,6 +68,13 @@ func (*HelloRequest) Descriptor() ([]byte, []int) {
 func (x *HelloRequest) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *HelloRequest) GetSex() string {
+	if x != nil {
+		return x.Sex
 	}
 	return ""
 }
@@ -118,21 +126,132 @@ func (x *HelloResponse) GetMessage() string {
 	return ""
 }
 
+type SumRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	A int32 `protobuf:"varint,1,opt,name=a,proto3" json:"a,omitempty"`
+	B int32 `protobuf:"varint,2,opt,name=b,proto3" json:"b,omitempty"`
+}
+
+func (x *SumRequest) Reset() {
+	*x = SumRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_grpc_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SumRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SumRequest) ProtoMessage() {}
+
+func (x *SumRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SumRequest.ProtoReflect.Descriptor instead.
+func (*SumRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *SumRequest) GetA() int32 {
+	if x != nil {
+		return x.A
+	}
+	return 0
+}
+
+func (x *SumRequest) GetB() int32 {
+	if x != nil {
+		return x.B
+	}
+	return 0
+}
+
+type SumResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Total int32 `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+}
+
+func (x *SumResponse) Reset() {
+	*x = SumResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_grpc_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SumResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SumResponse) ProtoMessage() {}
+
+func (x *SumResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SumResponse.ProtoReflect.Descriptor instead.
+func (*SumResponse) Descriptor() ([]byte, []int) {
+	return file_grpc_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SumResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 var File_grpc_proto protoreflect.FileDescriptor
 
 var file_grpc_proto_rawDesc = []byte{
 	0x0a, 0x0a, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x04, 0x67, 0x72,
-	0x70, 0x63, 0x22, 0x22, 0x0a, 0x0c, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x70, 0x63, 0x22, 0x34, 0x0a, 0x0c, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x29, 0x0a, 0x0d, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61,
-	0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
-	0x65, 0x32, 0x3d, 0x0a, 0x04, 0x47, 0x72, 0x70, 0x63, 0x12, 0x35, 0x0a, 0x08, 0x53, 0x61, 0x79,
-	0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x12, 0x12, 0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x48, 0x65, 0x6c,
-	0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x13, 0x2e, 0x67, 0x72, 0x70, 0x63,
-	0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x42, 0x08, 0x5a, 0x06, 0x2e, 0x3b, 0x67, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x65, 0x78, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x65, 0x78, 0x22, 0x29, 0x0a, 0x0d, 0x48, 0x65, 0x6c, 0x6c,
+	0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x22, 0x28, 0x0a, 0x0a, 0x53, 0x75, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x0c, 0x0a, 0x01, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x01, 0x61, 0x12,
+	0x0c, 0x0a, 0x01, 0x62, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x01, 0x62, 0x22, 0x23, 0x0a,
+	0x0b, 0x53, 0x75, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05,
+	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x74, 0x6f, 0x74,
+	0x61, 0x6c, 0x32, 0x6f, 0x0a, 0x04, 0x47, 0x72, 0x70, 0x63, 0x12, 0x35, 0x0a, 0x08, 0x53, 0x61,
+	0x79, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x12, 0x12, 0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x48, 0x65,
+	0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x13, 0x2e, 0x67, 0x72, 0x70,
+	0x63, 0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x30, 0x0a, 0x07, 0x53, 0x75, 0x6d, 0x46, 0x75, 0x6e, 0x63, 0x12, 0x10, 0x2e, 0x67,
+	0x72, 0x70, 0x63, 0x2e, 0x53, 0x75, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11,
+	0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x53, 0x75, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x00, 0x42, 0x08, 0x5a, 0x06, 0x2e, 0x3b, 0x67, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -147,16 +266,20 @@ func file_grpc_proto_rawDescGZIP() []byte {
 	return file_grpc_proto_rawDescData
 }
 
-var file_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_grpc_proto_goTypes = []interface{}{
 	(*HelloRequest)(nil),  // 0: grpc.HelloRequest
 	(*HelloResponse)(nil), // 1: grpc.HelloResponse
+	(*SumRequest)(nil),    // 2: grpc.SumRequest
+	(*SumResponse)(nil),   // 3: grpc.SumResponse
 }
 var file_grpc_proto_depIdxs = []int32{
 	0, // 0: grpc.Grpc.SayHello:input_type -> grpc.HelloRequest
-	1, // 1: grpc.Grpc.SayHello:output_type -> grpc.HelloResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: grpc.Grpc.SumFunc:input_type -> grpc.SumRequest
+	1, // 2: grpc.Grpc.SayHello:output_type -> grpc.HelloResponse
+	3, // 3: grpc.Grpc.SumFunc:output_type -> grpc.SumResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -192,6 +315,30 @@ func file_grpc_proto_init() {
 				return nil
 			}
 		}
+		file_grpc_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SumRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_grpc_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SumResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -199,7 +346,7 @@ func file_grpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_grpc_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -226,6 +373,7 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type GrpcClient interface {
 	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloResponse, error)
+	SumFunc(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
 }
 
 type grpcClient struct {
@@ -245,9 +393,19 @@ func (c *grpcClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grp
 	return out, nil
 }
 
+func (c *grpcClient) SumFunc(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error) {
+	out := new(SumResponse)
+	err := c.cc.Invoke(ctx, "/grpc.Grpc/SumFunc", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GrpcServer is the server API for Grpc service.
 type GrpcServer interface {
 	SayHello(context.Context, *HelloRequest) (*HelloResponse, error)
+	SumFunc(context.Context, *SumRequest) (*SumResponse, error)
 }
 
 // UnimplementedGrpcServer can be embedded to have forward compatible implementations.
@@ -256,6 +414,9 @@ type UnimplementedGrpcServer struct {
 
 func (*UnimplementedGrpcServer) SayHello(context.Context, *HelloRequest) (*HelloResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+}
+func (*UnimplementedGrpcServer) SumFunc(context.Context, *SumRequest) (*SumResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SumFunc not implemented")
 }
 
 func RegisterGrpcServer(s *grpc.Server, srv GrpcServer) {
@@ -280,6 +441,24 @@ func _Grpc_SayHello_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Grpc_SumFunc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SumRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GrpcServer).SumFunc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc.Grpc/SumFunc",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GrpcServer).SumFunc(ctx, req.(*SumRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Grpc_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "grpc.Grpc",
 	HandlerType: (*GrpcServer)(nil),
@@ -287,6 +466,10 @@ var _Grpc_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SayHello",
 			Handler:    _Grpc_SayHello_Handler,
+		},
+		{
+			MethodName: "SumFunc",
+			Handler:    _Grpc_SumFunc_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
