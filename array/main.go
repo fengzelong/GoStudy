@@ -68,7 +68,7 @@ func anonymousFunc(idx int) bool {
 	return true
 }
 
-// fibonaci 斐波那契数列
+// Fibonaci 斐波那契数列
 func Fibonaci(i int) int {
 	if i == 0 {
 		return 0
