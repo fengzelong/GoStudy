@@ -8,7 +8,7 @@ func main() {
 	for i := 0; i < max; i++ {
 		arr[i] = i + 1
 	}
-	idx := BinSearch(arr, 5200)
+	idx := BinSearch(arr, 450)
 	if idx == -1 {
 		fmt.Println("not found!")
 	} else {
