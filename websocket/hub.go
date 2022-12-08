@@ -23,9 +23,9 @@ func (h *hub) run() {
 			h.c[c] = true
 			c.data.Ip = c.ws.RemoteAddr().String()
 			c.data.Type = "handshake"
-			c.data.UserList = user_list
-			data_b, _ := json.Marshal(c.data)
-			c.sc <- data_b
+			c.data.UserList = userList
+			dataB, _ := json.Marshal(c.data)
+			c.sc <- dataB
 		case c := <-h.u:
 			if _, ok := h.c[c]; ok {
 				delete(h.c, c)

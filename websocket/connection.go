@@ -14,9 +14,11 @@ type connection struct {
 }
 
 var wu = &websocket.Upgrader{ReadBufferSize: 512,
-	WriteBufferSize: 512, CheckOrigin: func(r *http.Request) bool { return true }}
+	WriteBufferSize: 512,
+	CheckOrigin:     func(r *http.Request) bool { return true },
+}
 
-func myws(w http.ResponseWriter, r *http.Request) {
+func myWs(w http.ResponseWriter, r *http.Request) {
 	ws, err := wu.Upgrade(w, r, nil)
 	if err != nil {
 		return
@@ -27,11 +29,11 @@ func myws(w http.ResponseWriter, r *http.Request) {
 	c.reader()
 	defer func() {
 		c.data.Type = "logout"
-		user_list = del(user_list, c.data.User)
-		c.data.UserList = user_list
+		userList = del(userList, c.data.User)
+		c.data.UserList = userList
 		c.data.Content = c.data.User
-		data_b, _ := json.Marshal(c.data)
-		h.b <- data_b
+		dataB, _ := json.Marshal(c.data)
+		h.b <- dataB
 		h.r <- c
 	}()
 }
@@ -43,7 +45,7 @@ func (c *connection) writer() {
 	c.ws.Close()
 }
 
-var user_list = []string{}
+var userList []string
 
 func (c *connection) reader() {
 	for {
@@ -57,19 +59,19 @@ func (c *connection) reader() {
 		case "login":
 			c.data.User = c.data.Content
 			c.data.From = c.data.User
-			user_list = append(user_list, c.data.User)
-			c.data.UserList = user_list
-			data_b, _ := json.Marshal(c.data)
-			h.b <- data_b
+			userList = append(userList, c.data.User)
+			c.data.UserList = userList
+			dataB, _ := json.Marshal(c.data)
+			h.b <- dataB
 		case "user":
 			c.data.Type = "user"
-			data_b, _ := json.Marshal(c.data)
-			h.b <- data_b
+			dataB, _ := json.Marshal(c.data)
+			h.b <- dataB
 		case "logout":
 			c.data.Type = "logout"
-			user_list = del(user_list, c.data.User)
-			data_b, _ := json.Marshal(c.data)
-			h.b <- data_b
+			userList = del(userList, c.data.User)
+			dataB, _ := json.Marshal(c.data)
+			h.b <- dataB
 			h.r <- c
 		default:
 			fmt.Print("========default================")
@@ -85,15 +87,15 @@ func del(slice []string, user string) []string {
 	if count == 1 && slice[0] == user {
 		return []string{}
 	}
-	var n_slice = []string{}
+	var nSlice []string
 	for i := range slice {
 		if slice[i] == user && i == count {
 			return slice[:count]
 		} else if slice[i] == user {
-			n_slice = append(slice[:i], slice[i+1:]...)
+			nSlice = append(slice[:i], slice[i+1:]...)
 			break
 		}
 	}
-	fmt.Println(n_slice)
-	return n_slice
+	fmt.Println(nSlice)
+	return nSlice
 }
