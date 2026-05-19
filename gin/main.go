@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/testdata/protoexample"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/testdata/protoexample"
 )
 
 var R *gin.Engine
 
 type Login struct {
-	User     string `form:"user" json:"user" xml:"user"  binding:"required"`            // 用户名 必填
-	Password string `form:"password" json:"password" xml:"password" binding:"required"` // 密码 必填
+	User     string `form:"user" json:"user" xml:"user"  binding:"required"`            // 用户名，必填
+	Password string `form:"password" json:"password" xml:"password" binding:"required"` // 密码，必填
 }
 
 type Person struct {
@@ -23,8 +24,7 @@ type Person struct {
 	Name string `uri:"name" binding:"required"`
 }
 
-func init() {
-	//记录日志
+func setupRouter() *gin.Engine {
 	file, _ := os.Create("gin.log")
 	gin.DefaultWriter = io.MultiWriter(file, os.Stdout)
 	gin.DebugPrintRouteFunc = func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
@@ -34,42 +34,26 @@ func init() {
 	r := gin.New()
 	R = r
 
-	// 跨域设置
 	R.Use(Cors())
-
-	//使用logger中间件
-	//R.Use(ShowCode())
 	R.Use(Logger())
 
-	// CommonRouterRegister
 	CommonRouterRegister()
-
-	// FileUpload
 	FileUpload()
-
-	// RouterGroup
 	RouterGroup()
 
-	// Goroutine
 	R.GET("/longAsync", longAsync)
-
-	// Mode Bind
 	R.POST("/modelBind", ModelBind)
-
-	// Url Bind
 	r.GET("/urlBind/:name/:id", UrlBindFunc)
-
-	//Redirect
 	r.GET("/redirect", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "http://www.baidu.com/")
 	})
 
-	R.Run(":8080")
+	return R
 }
 
 func main() {
 	fmt.Println("welcome to gin!!")
-
+	setupRouter().Run(":8080")
 }
 
 func Cors() gin.HandlerFunc {
@@ -90,23 +74,16 @@ func Cors() gin.HandlerFunc {
 	}
 }
 
-// Logger 自定义中间件
+// Logger 自定义中间件示例。
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
-
-		// 设置 example 变量
 		c.Set("example", "12345")
-
-		// 请求前
-
 		c.Next()
 
-		// 请求后
 		latency := time.Since(t)
 		log.Print(latency)
 
-		// 获取发送的 status
 		status := c.Writer.Status()
 		log.Println(status)
 	}
@@ -118,7 +95,7 @@ func ShowCode() gin.HandlerFunc {
 	}
 }
 
-// UrlBindFunc url绑定
+// UrlBindFunc 绑定 URL 参数。
 func UrlBindFunc(c *gin.Context) {
 	var person Person
 	if err := c.ShouldBindUri(&person); err != nil {
@@ -128,7 +105,7 @@ func UrlBindFunc(c *gin.Context) {
 	c.JSON(200, gin.H{"name": person.Name, "uuid": person.ID})
 }
 
-// ModelBind 模型绑定验证
+// ModelBind 校验 JSON 请求数据。
 func ModelBind(c *gin.Context) {
 	var json Login
 	if err := c.ShouldBindJSON(&json); err != nil {
@@ -144,7 +121,7 @@ func ModelBind(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
 }
 
-// longAsync Goroutine使用
+// longAsync 演示在处理函数中使用 goroutine。
 func longAsync(c *gin.Context) {
 	cCp := c.Copy()
 	go func() {
@@ -153,19 +130,17 @@ func longAsync(c *gin.Context) {
 	}()
 }
 
-// login
 func login(c *gin.Context) {
 	name := c.DefaultQuery("name", "jack")
 	c.String(200, fmt.Sprintf("hello %s\n", name))
 }
 
-// submit
 func submit(c *gin.Context) {
 	name := c.DefaultQuery("name", "lily")
 	c.String(200, fmt.Sprintf("hello %s\n", name))
 }
 
-// RouterGroup 认证路由组
+// RouterGroup 注册分组路由。
 func RouterGroup() {
 	authorizedV1 := R.Group("/v1")
 	{
@@ -178,15 +153,13 @@ func RouterGroup() {
 	}
 }
 
-// CommonRouterRegister 普通路由注册
+// CommonRouterRegister 注册常见响应示例。
 func CommonRouterRegister() {
-	// gin.H 是 map[string]interface{} 的一种快捷方式
 	R.GET("/someJSON", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
 	})
 
 	R.GET("/moreJSON", func(c *gin.Context) {
-		// 你也可以使用一个结构体
 		var msg struct {
 			Name    string `json:"user"`
 			Message string
@@ -195,8 +168,6 @@ func CommonRouterRegister() {
 		msg.Name = "Lena"
 		msg.Message = "hey"
 		msg.Number = 123
-		// 注意 msg.Name 在 JSON 中变成了 "user"
-		// 将输出：{"user": "Lena", "Message": "hey", "Number": 123}
 		c.JSON(http.StatusOK, msg)
 	})
 
@@ -211,37 +182,29 @@ func CommonRouterRegister() {
 	R.GET("/someProtoBuf", func(c *gin.Context) {
 		reps := []int64{int64(1), int64(2)}
 		label := "test"
-		// protobuf 的具体定义写在 testdata/protoExample 文件中。
 		data := &protoexample.Test{
 			Label: &label,
 			Reps:  reps,
 		}
-		// 请注意，数据在响应中变为二进制数据
-		// 将输出被 protoExample.Test protobuf 序列化了的数据
 		c.ProtoBuf(http.StatusOK, data)
 	})
 }
 
-// FileUpload 文件上传路由
+// FileUpload 注册文件上传路由。
 func FileUpload() {
-	// 单文件上传
 	R.MaxMultipartMemory = 8 << 20 // 8 MiB
 	R.POST("/upload", func(c *gin.Context) {
-		// 单文件
 		file, _ := c.FormFile("file")
 		log.Println(file.Filename)
 
 		dst := "upload/" + file.Filename
-		// 上传文件至指定的完整文件路径
 		c.SaveUploadedFile(file, dst)
 
 		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 	})
 
-	// 多文件上传
 	R.MaxMultipartMemory = 8 << 20 // 8 MiB
 	R.POST("/uploads", func(c *gin.Context) {
-		// Multipart form
 		form, _ := c.MultipartForm()
 		files := form.File["upload[]"]
 
@@ -249,7 +212,6 @@ func FileUpload() {
 			log.Println(file.Filename)
 
 			dst := "upload/" + file.Filename
-			// 上传文件至指定目录
 			c.SaveUploadedFile(file, dst)
 		}
 		c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", len(files)))

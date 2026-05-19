@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-func TestBuilderAFailed(t *testing.T) {
+func TestBuilderAWithoutClothes(t *testing.T) {
 	builder := &builderA{}
 	director := NewDirector(builder)
 	director.ConstructA()
 	res := builder.ActionResult()
-	if !strings.Contains(res, "nike") {
-		t.Fatal("no wear")
+	if strings.Contains(res, "nike") {
+		t.Fatal("ConstructA 不应该包含衣服")
 	}
 }
 
@@ -21,6 +21,6 @@ func TestBuilderASuccess(t *testing.T) {
 	director.ConstructB()
 	res := builder.ActionResult()
 	if !strings.Contains(res, "nike") {
-		t.Fatal("no wear")
+		t.Fatal("没有穿衣服")
 	}
 }

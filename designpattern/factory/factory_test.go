@@ -15,14 +15,14 @@ var factory OperatorFactory
 func TestPlusOperatorSuccess(t *testing.T) {
 	factory = PlusOperatorFactory{}
 	if res := compute(factory, 32, 10); res != 42 {
-		t.Fatal("plus operator failed")
+		t.Fatal("加法操作失败")
 	}
 }
 
-func TestPlusOperatorFailed(t *testing.T) {
+func TestPlusOperatorWithDifferentInputs(t *testing.T) {
 	factory = PlusOperatorFactory{}
-	if res := compute(factory, 22, 10); res != 42 {
-		t.Fatal("plus operator failed")
+	if res := compute(factory, 22, 10); res != 32 {
+		t.Fatal("加法操作失败")
 	}
 }
 
@@ -30,13 +30,13 @@ func TestPlusOperatorFailed(t *testing.T) {
 func TestMinusOperatorSuccess(t *testing.T) {
 	factory = MinusOperatorFactory{}
 	if res := compute(factory, 22, 10); res != 12 {
-		t.Fatal("minus operator failed")
+		t.Fatal("减法操作失败")
 	}
 }
 
-func TestMinusOperatorFailed(t *testing.T) {
+func TestMinusOperatorWithDifferentExpectedResult(t *testing.T) {
 	factory = MinusOperatorFactory{}
-	if res := compute(factory, 22, 10); res != 10 {
-		t.Fatal("minus operator failed")
+	if res := compute(factory, 22, 10); res != 12 {
+		t.Fatal("减法操作失败")
 	}
 }

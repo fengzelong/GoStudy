@@ -1,0 +1,73 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Go：运行全部测试",
+      "type": "shell",
+      "command": "go test ./...",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：运行设计模式测试",
+      "type": "shell",
+      "command": "go test ./designpattern/...",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "test",
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：启动 Gin 示例",
+      "type": "shell",
+      "command": "go run ./gin",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：启动 RPC 服务端",
+      "type": "shell",
+      "command": "go run ./rpc/server",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：启动 RPC 客户端",
+      "type": "shell",
+      "command": "go run ./rpc/client",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$go"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "editor.formatOnSave": true,
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.tmp_gomodcache": true,
+    "**/.tmp_gopath": true
+  },
+  "go.formatTool": "gofmt",
+  "go.testFlags": [
+    "-count=1"
+  ],
+  "go.testTimeout": "120s",
+  "go.toolsEnvVars": {
+    "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+    "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+  },
+  "go.testEnvVars": {
+    "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+    "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+  }
+}

@@ -1,0 +1,24 @@
+# Go 构建产物
+*.exe
+*.test
+*.out
+
+# 日志和 trace 文件
+*.log
+trace.out
+
+# 本地缓存
+.tmp_*/
+.tmp_*
+
+# 上传文件和运行时文件
+gin/upload/
+
+# IDE 配置
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.code-workspace

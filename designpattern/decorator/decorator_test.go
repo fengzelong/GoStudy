@@ -8,14 +8,14 @@ func TestDecoratorSuccess(t *testing.T) {
 
 	res := c.CalFunc()
 	if res == 0 {
-		t.Fatal("test failed")
+		t.Fatal("装饰器计算失败")
 	}
 }
 
-func TestDecoratorFailed(t *testing.T) {
+func TestConcreteComponentDefault(t *testing.T) {
 	var c Component = &ConcreteComponent{}
 	res := c.CalFunc()
-	if res == 0 {
-		t.Fatal("test failed")
+	if res != 0 {
+		t.Fatal("默认组件应该返回零值")
 	}
 }
