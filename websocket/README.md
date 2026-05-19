@@ -14,5 +14,11 @@ go run .
 127.0.0.1:8080
 ```
 
-启动后可以打开 `local.html` 或自行连接 `/ws` 路由进行测试。
+可以通过 `WEBSOCKET_ADDR` 调整监听地址：
 
+```powershell
+$env:WEBSOCKET_ADDR="127.0.0.1:8081"
+go run .
+```
+
+启动后可以打开 `local.html` 或自行连接 `/ws` 路由进行测试。

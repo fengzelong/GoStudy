@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"GoStudy/internal/config"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/testdata/protoexample"
 )
@@ -52,8 +54,9 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	addr := config.Env("GIN_ADDR", ":8080")
 	fmt.Println("welcome to gin!!")
-	setupRouter().Run(":8080")
+	setupRouter().Run(addr)
 }
 
 func Cors() gin.HandlerFunc {

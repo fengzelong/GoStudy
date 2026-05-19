@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 
+	"GoStudy/internal/config"
 	"GoStudy/rpc/arith"
 )
 
@@ -17,7 +18,8 @@ func main() {
 	}
 	rpc.HandleHTTP()
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	addr := config.Env("RPC_ADDR", ":8080")
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Panicln(err)
 	}
 }

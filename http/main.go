@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"GoStudy/internal/config"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -17,5 +19,6 @@ func user(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/", user)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	addr := config.Env("HTTP_ADDR", ":8080")
+	log.Fatal(http.ListenAndServe(addr, nil))
 }

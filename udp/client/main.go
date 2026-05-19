@@ -3,26 +3,34 @@ package main
 import (
 	"fmt"
 	"net"
+
+	"GoStudy/internal/config"
 )
 
 func main() {
-	socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
-		IP:   net.IPv4(0, 0, 0, 0),
-		Port: 30000,
-	})
+	addr := config.Env("UDP_ADDR", "127.0.0.1:30000")
+	udpAddr, err := net.ResolveUDPAddr("udp", addr)
+	if err != nil {
+		fmt.Println("resolve udp addr failed, err:", err)
+		return
+	}
+
+	socket, err := net.DialUDP("udp", nil, udpAddr)
 	if err != nil {
 		fmt.Println("连接服务端失败，err:", err)
 		return
 	}
 	defer socket.Close()
+
 	sendData := []byte("Hello server")
-	_, err = socket.Write(sendData) // 发送数据
+	_, err = socket.Write(sendData)
 	if err != nil {
 		fmt.Println("发送数据失败，err:", err)
 		return
 	}
+
 	data := make([]byte, 4096)
-	n, remoteAddr, err := socket.ReadFromUDP(data) // 接收数据
+	n, remoteAddr, err := socket.ReadFromUDP(data)
 	if err != nil {
 		fmt.Println("接收数据失败，err:", err)
 		return

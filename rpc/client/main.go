@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/rpc"
 
+	"GoStudy/internal/config"
 	"GoStudy/rpc/arith"
 )
 
 func main() {
-	conn, err := rpc.DialHTTP("tcp", ":8080")
+	addr := config.Env("RPC_ADDR", "127.0.0.1:8080")
+	conn, err := rpc.DialHTTP("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
 	}

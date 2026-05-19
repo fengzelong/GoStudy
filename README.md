@@ -50,6 +50,14 @@ go run ./tcp/server
 go run ./tcp/client
 ```
 
+常见网络示例可以通过环境变量调整监听地址或连接地址，例如：
+
+```powershell
+$env:GIN_ADDR=":8081"
+$env:TCP_ADDR="127.0.0.1:20001"
+$env:GRPC_ADDR="127.0.0.1:50053"
+```
+
 运行独立子模块示例：
 
 ```sh

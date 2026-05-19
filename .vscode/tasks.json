@@ -62,6 +62,58 @@
       },
       "group": "build",
       "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：启动 TCP 服务端",
+      "type": "shell",
+      "command": "go run ./tcp/server",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：启动 TCP 客户端",
+      "type": "shell",
+      "command": "go run ./tcp/client",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：启动 UDP 服务端",
+      "type": "shell",
+      "command": "go run ./udp/server",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "Go：启动 UDP 客户端",
+      "type": "shell",
+      "command": "go run ./udp/client",
+      "options": {
+        "env": {
+          "GOMODCACHE": "${workspaceFolder}\\.tmp_gomodcache",
+          "GOPATH": "${workspaceFolder}\\.tmp_gopath"
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$go"
     }
   ]
 }
