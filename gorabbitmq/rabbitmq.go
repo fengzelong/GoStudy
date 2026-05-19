@@ -3,11 +3,12 @@ package gorabbitmq
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/streadway/amqp"
 )
 
-const MQURL = "amqp://fenglong:666666@124.223.8.183:5672/GoTest"
+const defaultMQURL = "amqp://guest:guest@127.0.0.1:5672/"
 
 type RabbitMQ struct {
 	conn    *amqp.Connection
@@ -24,7 +25,12 @@ type RabbitMQ struct {
 
 // NewRabbitMQ 创建 RabbitMQ 实例。
 func NewRabbitMQ(queueName string, exchange string, key string) *RabbitMQ {
-	return &RabbitMQ{QueueName: queueName, Exchange: exchange, Key: key, MqUrl: MQURL}
+	mqURL := os.Getenv("RABBITMQ_URL")
+	if mqURL == "" {
+		mqURL = defaultMQURL
+		fmt.Println("未设置 RABBITMQ_URL，使用本地默认连接示例")
+	}
+	return &RabbitMQ{QueueName: queueName, Exchange: exchange, Key: key, MqUrl: mqURL}
 }
 
 // Destory 关闭 channel 和 connection。
@@ -108,10 +114,10 @@ func (r *RabbitMQ) ConsumeSimple() {
 	forever := make(chan bool)
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
+			log.Printf("收到消息: %s", d.Body)
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	log.Printf("等待消息中，按 CTRL+C 退出")
 	<-forever
 }

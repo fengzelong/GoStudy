@@ -7,19 +7,20 @@ func main() {
 	fmt.Println(HeapSort(arr))
 }
 
+// HeapSortMax 在指定长度内调整最大堆。
 func HeapSortMax(arr []int, length int) []int {
 	if length <= 1 {
 		return arr
 	}
-	depth := length/2 - 1 //二叉树深度
+	depth := length/2 - 1
 	for i := depth; i >= 0; i-- {
-		topMax := i //假定最大的位置就在i的位置
+		topMax := i
 		leftChild := 2*i + 1
 		rightChild := 2*i + 2
-		if leftChild <= length-1 && arr[leftChild] > arr[topMax] { //防止越过界限
+		if leftChild <= length-1 && arr[leftChild] > arr[topMax] {
 			topMax = leftChild
 		}
-		if rightChild <= length-1 && arr[rightChild] > arr[topMax] { //防止越过界限
+		if rightChild <= length-1 && arr[rightChild] > arr[topMax] {
 			topMax = rightChild
 		}
 		if topMax != i {
@@ -29,6 +30,7 @@ func HeapSortMax(arr []int, length int) []int {
 	return arr
 }
 
+// HeapSort 堆排序。
 func HeapSort(arr []int) []int {
 	length := len(arr)
 	for i := 0; i < length; i++ {

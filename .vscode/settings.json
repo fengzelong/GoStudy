@@ -3,7 +3,8 @@
   "files.eol": "\n",
   "files.exclude": {
     "**/.tmp_gomodcache": true,
-    "**/.tmp_gopath": true
+    "**/.tmp_gopath": true,
+    "**/.tmp_*": true
   },
   "go.formatTool": "gofmt",
   "go.testFlags": [

@@ -7,8 +7,11 @@ func main() {
 	fmt.Println(BubbleSort(arr))
 }
 
-// BubbleSort 冒泡排序并返回最大值
+// BubbleSort 冒泡排序并返回最大值。
 func BubbleSort(arr []int) ([]int, int) {
+	if len(arr) == 0 {
+		return arr, 0
+	}
 	for i := 0; i < len(arr); i++ {
 		for j := i + 1; j < len(arr); j++ {
 			if arr[i] > arr[j] {

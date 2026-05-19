@@ -8,14 +8,14 @@ func main() {
 	fmt.Println(selectSort)
 }
 
-// SelectSort 选择排序
+// SelectSort 选择排序。
 func SelectSort(arr []int) []int {
 	length := len(arr)
 	if length <= 1 {
 		return arr
 	}
 
-	for i := 1; i < length; i++ {
+	for i := 0; i < length; i++ {
 		min := i
 		for j := i + 1; j < length; j++ {
 			if arr[min] > arr[j] {

@@ -1,8 +1,16 @@
 package main
 
-import "gorabbitmq"
+import (
+	"os"
+
+	"gorabbitmq"
+)
 
 func main() {
-	rabbitmq := gorabbitmq.NewRabbitMQSimple("GoTestMessage")
+	queueName := os.Getenv("RABBITMQ_QUEUE")
+	if queueName == "" {
+		queueName = "GoTestMessage"
+	}
+	rabbitmq := gorabbitmq.NewRabbitMQSimple(queueName)
 	rabbitmq.ConsumeSimple()
 }

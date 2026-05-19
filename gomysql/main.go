@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -21,34 +24,42 @@ type Place struct {
 
 var Db *sqlx.DB
 
-func init() {
-	db, err := sqlx.Open("mysql", "root:fl666@2022@tcp(124.223.8.183:3306)/go_test")
-	if err != nil {
-		fmt.Println("open mysql failed", err)
-		return
-	} else {
-		fmt.Println("open mysql success")
+func openDB() (*sqlx.DB, error) {
+	dsn := os.Getenv("MYSQL_DSN")
+	if dsn == "" {
+		dsn = "root:password@tcp(127.0.0.1:3306)/go_test"
+		fmt.Println("未设置 MYSQL_DSN，使用本地默认连接示例")
 	}
-	Db = db
+
+	db, err := sqlx.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func main() {
-	//新增数据到mysql
-	//insertFunc()
-
-	//查询mysql数据
-	//selectFunc()
-
-	//更新mysql数据
-	//updateFunc("张三3", 3)
-
-	//删除mysql数据
-	delFunc(6)
-
+	db, err := openDB()
+	if err != nil {
+		log.Fatalf("打开 MySQL 失败: %v", err)
+	}
+	Db = db
 	defer Db.Close()
+
+	// 新增数据到 MySQL
+	// insertFunc()
+
+	// 查询 MySQL 数据
+	// selectFunc()
+
+	// 更新 MySQL 数据
+	// updateFunc("张三3", 3)
+
+	// 删除 MySQL 数据
+	delFunc(6)
 }
 
-// insertFunc mysql新增
+// insertFunc 新增 MySQL 记录。
 func insertFunc() {
 	res, err := Db.NamedExec("insert into person(username, sex, email)values(:username, :sex, :email)",
 		map[string]interface{}{
@@ -57,58 +68,60 @@ func insertFunc() {
 			"email":    "zhangsan@163.com",
 		})
 	if err != nil {
-		fmt.Println("exec failed1, ", err)
+		fmt.Println("执行新增失败: ", err)
 		return
 	}
-	id, err1 := res.LastInsertId()
-	if err1 != nil {
-		fmt.Println("exec failed2, ", err1)
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		fmt.Println("获取新增 ID 失败: ", err)
 		return
 	}
-	fmt.Println("insert success:", id)
+	fmt.Println("新增成功:", id)
 }
 
-// selectFunc mysql查询
+// selectFunc 查询 MySQL 记录。
 func selectFunc() {
 	p1 := Person{}
 	err := Db.Get(&p1, "SELECT * FROM person WHERE user_id = ?", 4)
 	if err != nil {
-		fmt.Printf("query error = %v\n", err)
-	} else {
-		fmt.Printf("%#v\n", p1)
+		fmt.Printf("查询失败 = %v\n", err)
+		return
 	}
+	fmt.Printf("%#v\n", p1)
 }
 
-// updateFunc mysql更新
+// updateFunc 更新 MySQL 记录。
 func updateFunc(username string, id int) bool {
 	res, err := Db.Exec("update person set username = ? where user_id = ?", username, id)
 	if err != nil {
-		fmt.Printf("update error = %v\n", err)
+		fmt.Printf("更新失败 = %v\n", err)
 		return false
 	}
-	row, err1 := res.RowsAffected()
-	if err1 != nil {
-		fmt.Println("rows failed, ", err1)
+
+	row, err := res.RowsAffected()
+	if err != nil {
+		fmt.Println("获取影响行数失败: ", err)
 		return false
 	}
-	fmt.Println("update success = ", row)
+	fmt.Println("更新成功 = ", row)
 	return true
 }
 
-// delFunc mysql删除
+// delFunc 删除 MySQL 记录。
 func delFunc(id int) bool {
 	res, err := Db.Exec("delete from person where user_id = ?", id)
 	if err != nil {
-		fmt.Println("exec failed, ", err)
+		fmt.Println("执行删除失败: ", err)
 		return false
 	}
 
-	row, err1 := res.RowsAffected()
-	if err1 != nil {
-		fmt.Println("rows failed, ", err1)
+	row, err := res.RowsAffected()
+	if err != nil {
+		fmt.Println("获取影响行数失败: ", err)
 		return false
 	}
 
-	fmt.Println("delete success: ", row)
+	fmt.Println("删除成功: ", row)
 	return true
 }

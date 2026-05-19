@@ -7,14 +7,15 @@ func main() {
 	fmt.Printf("sort result: %v", QuickSort(array))
 }
 
+// QuickSort 快速排序。
 func QuickSort(arr []int) []int {
 	if len(arr) <= 1 {
 		return arr
 	}
-	splitData := arr[0]       //第一个数据
-	low := make([]int, 0, 0)  //比我小的数据
-	high := make([]int, 0, 0) //比我大的数据
-	mid := make([]int, 0, 0)  //与我一样大的数据
+	splitData := arr[0]
+	low := make([]int, 0)
+	high := make([]int, 0)
+	mid := make([]int, 0)
 	mid = append(mid, splitData)
 
 	for i := 1; i < len(arr); i++ {

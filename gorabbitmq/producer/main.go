@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -9,7 +10,11 @@ import (
 )
 
 func main() {
-	rabbitmq := gorabbitmq.NewRabbitMQSimple("GoTestMessage")
+	queueName := os.Getenv("RABBITMQ_QUEUE")
+	if queueName == "" {
+		queueName = "GoTestMessage"
+	}
+	rabbitmq := gorabbitmq.NewRabbitMQSimple(queueName)
 
 	for i := 0; i <= 100; i++ {
 		rabbitmq.PublishSimple("Hello go!" + strconv.Itoa(i))
