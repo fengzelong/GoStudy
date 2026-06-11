@@ -23,6 +23,9 @@ function Invoke-GoTest {
     try {
         Write-Host "==> go test $Pattern ($Path)"
         go test $Pattern
+        if ($LASTEXITCODE -ne 0) {
+            throw "go test $Pattern failed in $Path"
+        }
     }
     finally {
         Pop-Location
