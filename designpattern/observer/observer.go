@@ -1,4 +1,4 @@
-package obserser
+package observer
 
 import "fmt"
 

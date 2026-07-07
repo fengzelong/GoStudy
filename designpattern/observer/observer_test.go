@@ -1,11 +1,11 @@
-package obserser
+package observer
 
 import (
 	"fmt"
 	"testing"
 )
 
-func TestObserser(t *testing.T) {
+func TestObserver(t *testing.T) {
 
 	sub := NewSubject()
 	for i := 1; i <= 5; i++ {
