@@ -27,6 +27,9 @@ try {
     Write-Host "==> full test"
     & (Join-Path $PSScriptRoot "test.ps1")
 
+    Write-Host "==> go vet"
+    go vet ./...
+
     Write-Host "==> git status"
     git -c core.excludesfile= status --short
 }

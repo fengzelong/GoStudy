@@ -10,10 +10,18 @@ import (
 	"GoStudy/rpc/arith"
 )
 
+func newArithRPCServer() (*rpc.Server, error) {
+	server := rpc.NewServer()
+	if err := server.RegisterName("Arith", new(arith.Arith)); err != nil {
+		return nil, err
+	}
+	return server, nil
+}
+
 func main() {
 	fmt.Println("rpc server start")
 
-	if err := rpc.Register(new(arith.Arith)); err != nil {
+	if err := rpc.RegisterName("Arith", new(arith.Arith)); err != nil {
 		log.Panicln(err)
 	}
 	rpc.HandleHTTP()

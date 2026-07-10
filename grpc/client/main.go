@@ -2,11 +2,11 @@ package main
 
 import (
 	pb "GoStudy/proto/grpc"
+	"context"
 	"fmt"
 
 	"GoStudy/internal/config"
 
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
@@ -26,11 +26,19 @@ func main() {
 	ctx := context.Background()
 	for idx < 50 {
 		idx++
-		req := &pb.SumRequest{A: idx * 2, B: (idx * 2) + 1}
-		res, err := client.SumFunc(ctx, req)
+		total, err := callSum(ctx, client, idx*2, (idx*2)+1)
 		if err != nil {
 			grpclog.Fatalln(err)
 		}
-		fmt.Println(res.Total)
+		fmt.Println(total)
 	}
+}
+
+func callSum(ctx context.Context, client pb.GrpcClient, a int32, b int32) (int32, error) {
+	req := &pb.SumRequest{A: a, B: b}
+	res, err := client.SumFunc(ctx, req)
+	if err != nil {
+		return 0, err
+	}
+	return res.Total, nil
 }

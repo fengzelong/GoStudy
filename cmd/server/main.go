@@ -35,7 +35,7 @@ func main() {
 		ShutdownTimeout: shutdownTimeout,
 	}
 
-	closer, err := logger.Init(cfg.Env) 
+	closer, err := logger.Init(cfg.Env)
 	if err != nil {
 		log.Fatalf("init logger: %v", err)
 	}

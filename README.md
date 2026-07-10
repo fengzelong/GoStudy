@@ -82,7 +82,15 @@ go run ./tcp/client
 ```powershell
 $env:GIN_ADDR=":8081"
 $env:TCP_ADDR="127.0.0.1:20001"
-$env:GRPC_ADDR="127.0.0.1:50053"
+$env:GRPC_ADDR="127.0.0.1:50052"
+```
+
+如果 PowerShell 执行策略阻止运行 `.\scripts\test.ps1`，可以先使用根模块测试命令兜底：
+
+```powershell
+$env:GOMODCACHE="$PWD\.tmp_gomodcache"
+$env:GOPATH="$PWD\.tmp_gopath"
+go test ./...
 ```
 
 运行独立子模块示例：
