@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"GoStudy/internal/audit"
 	"GoStudy/internal/domain"
 	"GoStudy/internal/event"
 	"GoStudy/internal/repository"
@@ -19,6 +20,7 @@ type TaskService struct {
 	tasks  repository.TaskRepository
 	users  repository.UserRepository
 	events event.Publisher
+	audit  audit.Logger
 }
 
 // NewTaskService 依赖任务仓储和用户仓储，用于校验任务归属。
@@ -27,7 +29,14 @@ func NewTaskService(tasks repository.TaskRepository, users repository.UserReposi
 	if len(publishers) > 0 && publishers[0] != nil {
 		publisher = publishers[0]
 	}
-	return &TaskService{tasks: tasks, users: users, events: publisher}
+	return &TaskService{tasks: tasks, users: users, events: publisher, audit: audit.NewMemoryLogger()}
+}
+
+// SetAuditLogger 为服务注入审计记录器，主要用于应用装配和测试。
+func (s *TaskService) SetAuditLogger(logger audit.Logger) {
+	if logger != nil {
+		s.audit = logger
+	}
 }
 
 // Create 创建任务前会确认负责人存在，避免产生孤立任务。
@@ -55,6 +64,7 @@ func (s *TaskService) Create(ctx context.Context, ownerID int64, input CreateTas
 	if err := s.events.Publish(ctx, "task.created", task); err != nil {
 		return domain.Task{}, err
 	}
+	_ = s.audit.Record(ctx, audit.Entry{Action: "task.created", ActorID: ownerID, Resource: fmt.Sprintf("task:%d", task.ID)})
 	return task, nil
 }
 
@@ -107,5 +117,6 @@ func (s *TaskService) Complete(ctx context.Context, ownerID int64, id int64) (do
 	if err := s.events.Publish(ctx, "task.completed", task); err != nil {
 		return domain.Task{}, err
 	}
+	_ = s.audit.Record(ctx, audit.Entry{Action: "task.completed", ActorID: ownerID, Resource: fmt.Sprintf("task:%d", task.ID)})
 	return task, nil
 }

@@ -2,8 +2,11 @@ package auth
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
+
+	"GoStudy/internal/domain"
 )
 
 func TestPasswordHashAndVerify(t *testing.T) {
@@ -32,7 +35,7 @@ func TestPasswordHashAndVerify(t *testing.T) {
 func TestTokenGenerateAndParse(t *testing.T) {
 	manager := NewManager("test-secret", time.Hour)
 
-	token, err := manager.Generate(7)
+	token, err := manager.Generate(7, domain.UserRoleAdmin)
 	if err != nil {
 		t.Fatalf("generate token: %v", err)
 	}
@@ -43,6 +46,25 @@ func TestTokenGenerateAndParse(t *testing.T) {
 	}
 	if claims.Subject != 7 {
 		t.Fatalf("expected subject 7, got %d", claims.Subject)
+	}
+	if claims.Role != domain.UserRoleAdmin {
+		t.Fatalf("expected admin role, got %s", claims.Role)
+	}
+	if len(strings.Split(token, ".")) != 3 {
+		t.Fatalf("expected JWT with three parts, got %s", token)
+	}
+}
+
+func TestTokenRejectsTampering(t *testing.T) {
+	manager := NewManager("test-secret", time.Hour)
+	token, err := manager.Generate(7)
+	if err != nil {
+		t.Fatalf("generate token: %v", err)
+	}
+	parts := strings.Split(token, ".")
+	parts[1] = parts[1] + "x"
+	if _, err := manager.Parse(strings.Join(parts, ".")); !errors.Is(err, ErrInvalidToken) {
+		t.Fatalf("expected invalid token, got %v", err)
 	}
 }
 

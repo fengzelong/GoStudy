@@ -15,7 +15,7 @@ GoStudy 是一个 Go 语言学习示例仓库，覆盖基础语法、算法、�
 | gRPC | [`grpc`](grpc)、[`proto`](proto) | 客户端、服务端、protobuf 协议与生成代码 |
 | 数据与消息 | [`gomysql`](gomysql)、[`gorm`](gorm)、[`goredis`](goredis)、[`gorabbitmq`](gorabbitmq) | MySQL、GORM、Redis、RabbitMQ；需要对应本地服务 |
 | 其他专题 | [`encrypt`](encrypt)、[`log`](log)、[`runtime`](runtime)、[`task`](task)、[`gmp`](gmp)、[`study`](study) | 加密、日志、运行时、定时任务、trace 与语法练习 |
-| 企业骨架 | [`cmd/server`](cmd/server)、[`internal`](internal) | 分层、路由、服务、仓储、日志和鉴权 |
+| 企业骨架 | [`cmd/server`](cmd/server)、[`internal`](internal) | 分层、鉴权、分页、任务归属、可选缓存与事件发布 |
 
 ## 模块说明
 
@@ -59,13 +59,23 @@ go run ./cmd/server
 curl http://127.0.0.1:8080/health
 ```
 
-企业应用骨架默认使用内存仓储，不依赖外部服务；需要连接 MySQL 时设置：
+企业应用骨架默认使用内存仓储，缓存和消息队列均关闭，不依赖外部服务；需要连接 MySQL 时设置：
 
 ```powershell
 $env:APP_STORAGE="mysql"
 $env:MYSQL_DSN="root:password@tcp(127.0.0.1:3306)/go_test?charset=utf8mb4&parseTime=True&loc=Local"
 go run ./cmd/server
 ```
+
+可选启用进程内缓存和任务事件，仍不需要外部服务：
+
+```powershell
+$env:APP_CACHE="memory"
+$env:APP_MQ="memory"
+go run ./cmd/server
+```
+
+完整的 Redis、RabbitMQ 配置和接口说明见 [企业应用骨架说明](docs/enterprise-app.md)。
 
 运行单个示例：
 

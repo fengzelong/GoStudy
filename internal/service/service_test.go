@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"GoStudy/internal/audit"
 	"GoStudy/internal/domain"
 	"GoStudy/internal/event"
 	"GoStudy/internal/repository"
@@ -127,6 +128,34 @@ func TestTaskServicePublishesEvents(t *testing.T) {
 	}
 }
 
+func TestServicesRecordAuditEntries(t *testing.T) {
+	ctx := context.Background()
+	store := repository.NewMemoryStore()
+	logger := audit.NewMemoryLogger()
+	userSvc := NewUserService(store)
+	userSvc.SetAuditLogger(logger)
+	taskSvc := NewTaskService(store, store)
+	taskSvc.SetAuditLogger(logger)
+	user, err := userSvc.Register(ctx, RegisterUserInput{Name: "Alice", Email: "alice@example.com", Password: "secret1"})
+	if err != nil {
+		t.Fatalf("register user: %v", err)
+	}
+	if _, err := userSvc.Login(ctx, LoginInput{Email: user.Email, Password: "secret1"}); err != nil {
+		t.Fatalf("login user: %v", err)
+	}
+	task, err := taskSvc.Create(ctx, user.ID, CreateTaskInput{Title: "audit task"})
+	if err != nil {
+		t.Fatalf("create task: %v", err)
+	}
+	if _, err := taskSvc.Complete(ctx, user.ID, task.ID); err != nil {
+		t.Fatalf("complete task: %v", err)
+	}
+	entries := logger.Entries()
+	if len(entries) != 3 || entries[0].Action != "auth.login" || entries[1].Action != "task.created" || entries[2].Action != "task.completed" {
+		t.Fatalf("unexpected audit entries: %+v", entries)
+	}
+}
+
 func TestUserServiceListPagination(t *testing.T) {
 	ctx := context.Background()
 	store := repository.NewMemoryStore()
@@ -142,5 +171,19 @@ func TestUserServiceListPagination(t *testing.T) {
 	}
 	if page.Page != 2 || page.PageSize != 2 || page.Total != 3 || len(page.Items) != 1 {
 		t.Fatalf("unexpected user page: %+v", page)
+	}
+}
+
+func TestUserServiceAssignsConfiguredAdminRole(t *testing.T) {
+	ctx := context.Background()
+	store := repository.NewMemoryStore()
+	svc := NewUserService(store)
+	svc.SetAdminEmail("admin@example.com")
+	admin, err := svc.Register(ctx, RegisterUserInput{Name: "Admin", Email: "admin@example.com", Password: "secret1"})
+	if err != nil {
+		t.Fatalf("register admin: %v", err)
+	}
+	if admin.Role != domain.UserRoleAdmin {
+		t.Fatalf("expected admin role, got %s", admin.Role)
 	}
 }

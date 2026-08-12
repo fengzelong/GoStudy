@@ -18,11 +18,12 @@ type GormStore struct {
 
 // userModel 是 GORM 持久化模型，和 domain.User 分开以隔离数据库细节。
 type userModel struct {
-	ID           int64     `gorm:"primaryKey"`
-	Name         string    `gorm:"size:100;not null"`
-	Email        string    `gorm:"size:255;uniqueIndex;not null"`
-	PasswordHash string    `gorm:"size:255;not null"`
-	CreatedAt    time.Time `gorm:"not null"`
+	ID           int64           `gorm:"primaryKey"`
+	Name         string          `gorm:"size:100;not null"`
+	Email        string          `gorm:"size:255;uniqueIndex;not null"`
+	Role         domain.UserRole `gorm:"size:32;not null"`
+	PasswordHash string          `gorm:"size:255;not null"`
+	CreatedAt    time.Time       `gorm:"not null"`
 }
 
 // taskModel 是任务表结构，领域层只依赖 domain.Task。
@@ -76,6 +77,7 @@ func (s *GormStore) CreateUser(ctx context.Context, user domain.User) (domain.Us
 	model := userModel{
 		Name:         user.Name,
 		Email:        user.Email,
+		Role:         user.Role,
 		PasswordHash: user.PasswordHash,
 		CreatedAt:    time.Now(),
 	}
@@ -116,6 +118,22 @@ func (s *GormStore) ListUsers(ctx context.Context) ([]domain.User, error) {
 		users = append(users, model.toDomain())
 	}
 	return users, nil
+}
+
+// UpdateUser 更新已有用户，用于角色调整等管理操作。
+func (s *GormStore) UpdateUser(ctx context.Context, user domain.User) (domain.User, error) {
+	var model userModel
+	if err := s.db.WithContext(ctx).First(&model, user.ID).Error; err != nil {
+		return domain.User{}, mapGormError(err)
+	}
+	model.Name = user.Name
+	model.Email = user.Email
+	model.Role = user.Role
+	model.PasswordHash = user.PasswordHash
+	if err := s.db.WithContext(ctx).Save(&model).Error; err != nil {
+		return domain.User{}, err
+	}
+	return model.toDomain(), nil
 }
 
 // CreateTask 创建任务并补齐创建、更新时间。
@@ -181,6 +199,7 @@ func (m userModel) toDomain() domain.User {
 		ID:           m.ID,
 		Name:         m.Name,
 		Email:        m.Email,
+		Role:         m.Role,
 		PasswordHash: m.PasswordHash,
 		CreatedAt:    m.CreatedAt,
 	}

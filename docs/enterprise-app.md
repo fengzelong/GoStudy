@@ -9,8 +9,11 @@
 - `internal/router`：Gin 路由、版本分组、分页参数和错误响应。
 - `internal/service`：用户和任务业务逻辑、任务归属隔离和分页。
 - `internal/repository`：仓储接口、内存实现和 GORM/MySQL 实现。
+- `internal/cache`：关闭、内存和 Redis 缓存实现，当前缓存用户资料。
+- `internal/event`：关闭、内存和 RabbitMQ 事件发布器，当前发布任务创建、完成事件。
 - `internal/domain`：用户、任务等领域对象。
-- `internal/auth`：演示用密码摘要和 Token 签发校验。
+- `internal/auth`：bcrypt 密码摘要和 HS256 JWT 签发校验。
+- `internal/audit`：登录、任务创建和完成的内存审计记录。
 - `internal/logger`：zap 结构化日志和日志切割。
 - `internal/middleware`：请求 ID、CORS、请求日志和鉴权中间件。
 - `internal/response`：统一 JSON 响应。
@@ -27,7 +30,11 @@
 | `internal/router` | 处理 HTTP 入参、鉴权分组和响应转换 |
 | `internal/service` | 承载业务规则，例如注册去重、任务归属校验 |
 | `internal/repository` | 隐藏存储细节，支持内存和 MySQL 两种实现 |
+| `internal/cache` | 隔离缓存实现，支持关闭、内存和 Redis 三种模式 |
+| `internal/event` | 隔离事件发布实现，支持关闭、内存和 RabbitMQ 三种模式 |
 | `internal/domain` | 保存业务对象，不依赖 Gin、GORM 等框架 |
+| `internal/auth` | 使用 bcrypt 校验密码并签发包含角色声明的 HS256 JWT |
+| `internal/audit` | 记录登录与任务状态变更等关键操作 |
 
 这样的拆分让示例可以先用内存仓储学习流程，再平滑切换到 MySQL。
 
@@ -43,6 +50,7 @@
 | `APP_MQ` | `off` | 事件发布类型，支持 `off`、`memory`、`rabbitmq` |
 | `APP_TOKEN_SECRET` | `gostudy-dev-secret` | Token 签名密钥 |
 | `APP_TOKEN_TTL` | `2h` | Token 有效期 |
+| `APP_ADMIN_EMAIL` | 空 | 匹配该邮箱的新注册用户或既有用户会被设为管理员 |
 | `APP_SHUTDOWN_TIMEOUT` | `10s` | 优雅停机等待时间 |
 | `MYSQL_DSN` | 空 | MySQL 连接串，`APP_STORAGE=mysql` 时必填 |
 | `REDIS_ADDR` | 空 | Redis 地址，`APP_CACHE=redis` 时必填 |
@@ -61,6 +69,7 @@ $env:APP_CACHE="off"
 $env:APP_MQ="off"
 $env:APP_TOKEN_SECRET="change-me"
 $env:APP_TOKEN_TTL="2h"
+$env:APP_ADMIN_EMAIL="admin@example.com"
 $env:APP_SHUTDOWN_TIMEOUT="10s"
 go run ./cmd/server
 ```
@@ -104,7 +113,7 @@ go run ./cmd/server
 | `POST` | `/api/v1/users` | 否 | 注册用户 |
 | `POST` | `/api/v1/auth/login` | 否 | 登录并取得 Token |
 | `GET` | `/api/v1/me` | 是 | 查询当前用户资料 |
-| `GET` | `/api/v1/users` | 是 | 查询用户列表，支持分页 |
+| `GET` | `/api/v1/users` | 管理员 | 查询用户列表，支持分页 |
 | `POST` | `/api/v1/tasks` | 是 | 创建当前用户的任务 |
 | `GET` | `/api/v1/tasks` | 是 | 查询当前用户的任务，支持分页 |
 | `PATCH` | `/api/v1/tasks/:id/complete` | 是 | 完成任务 |
@@ -112,6 +121,12 @@ go run ./cmd/server
 列表接口支持 `page` 和 `page_size` 参数，默认分别为 `1` 和 `20`，`page_size` 最大为
 `100`。响应的 `data` 包含 `items`、`page`、`page_size` 和 `total`。任务创建时不再接受
 `owner_id`，任务自动归属当前认证用户；读取或完成其他用户的任务会返回 `403`。
+
+普通注册用户的角色为 `user`。设置 `APP_ADMIN_EMAIL` 后，与该邮箱匹配的用户角色为
+`admin`；当前管理员可以访问用户列表，普通用户会收到 `40301`。登录签发的是 HS256 JWT，
+其中包含用户 ID、角色、签发时间和过期时间。密码以 bcrypt 摘要保存，接口不会返回密码摘要。
+
+当前会将登录、任务创建和任务完成写入内存审计记录。审计接口和持久化存储将在后续工程化阶段扩展。
 
 ## 错误码
 
@@ -174,9 +189,8 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/tasks/1/complete \
 
 ## 后续升级方向
 
-1. 接入 Redis 缓存用户或任务查询。
-2. 接入 RabbitMQ 发布任务事件。
-3. 将演示 Token 替换为 JWT 或统一认证中心。
-4. 继续补充更多 HTTP 路由测试。
+1. 补充 OpenAPI、Docker Compose 与可选 MySQL 集成测试。
+2. 为审计记录增加查询接口和持久化实现。
+3. 根据多服务场景评估 JWT 刷新、吊销或统一认证中心。
 
 更完整的阶段拆分和验收方式见 `docs/enterprise-roadmap.md`。

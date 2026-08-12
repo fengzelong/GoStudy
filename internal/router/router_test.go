@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"GoStudy/internal/auth"
+	"GoStudy/internal/domain"
 	"GoStudy/internal/repository"
 	"GoStudy/internal/response"
 	"GoStudy/internal/service"
@@ -139,6 +140,16 @@ func TestEnterpriseRoutesCurrentUserOwnershipAndPagination(t *testing.T) {
 	assertResponseCode(t, rec.Body.String(), 40301)
 
 	rec = performRequest(r.Engine(), http.MethodGet, "/api/v1/users?page=0", "", aliceToken)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected ordinary user list to be forbidden, got %d: %s", rec.Code, rec.Body.String())
+	}
+	assertResponseCode(t, rec.Body.String(), 40301)
+
+	adminToken, err := auth.NewManager("test-secret", time.Hour).Generate(1, domain.UserRoleAdmin)
+	if err != nil {
+		t.Fatalf("generate admin token: %v", err)
+	}
+	rec = performRequest(r.Engine(), http.MethodGet, "/api/v1/users?page=0", "", adminToken)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected invalid pagination to fail, got %d: %s", rec.Code, rec.Body.String())
 	}

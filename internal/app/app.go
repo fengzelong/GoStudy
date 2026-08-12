@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"GoStudy/internal/audit"
 	"GoStudy/internal/auth"
 	"GoStudy/internal/cache"
 	"GoStudy/internal/event"
@@ -29,6 +30,7 @@ type Config struct {
 	RabbitMQQueue   string
 	TokenSecret     string
 	TokenTTL        time.Duration
+	AdminEmail      string
 	ShutdownTimeout time.Duration
 }
 
@@ -61,6 +63,15 @@ func New(cfg Config) (*App, error) {
 
 	userService := service.NewUserService(store, cacheStore)
 	taskService := service.NewTaskService(store, store, publisher)
+	auditLogger := audit.NewMemoryLogger()
+	userService.SetAuditLogger(auditLogger)
+	taskService.SetAuditLogger(auditLogger)
+	userService.SetAdminEmail(cfg.AdminEmail)
+	if err := userService.PromoteAdmin(context.Background(), cfg.AdminEmail); err != nil {
+		_ = cacheStore.Close()
+		_ = publisher.Close()
+		return nil, err
+	}
 
 	return &App{
 		cfg:    cfg,

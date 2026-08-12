@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"GoStudy/internal/auth"
+	"GoStudy/internal/domain"
 	"GoStudy/internal/middleware"
 	"GoStudy/internal/response"
 	"GoStudy/internal/service"
@@ -66,7 +67,7 @@ func (r *Router) register() {
 		protected.Use(middleware.Auth(r.deps.TokenManager))
 		{
 			protected.GET("/me", r.getCurrentUser)
-			protected.GET("/users", r.listUsers)
+			protected.GET("/users", middleware.RequireRole(domain.UserRoleAdmin), r.listUsers)
 			protected.POST("/tasks", r.createTask)
 			protected.GET("/tasks", r.listTasks)
 			protected.PATCH("/tasks/:id/complete", r.completeTask)
@@ -118,7 +119,7 @@ func (r *Router) login(c *gin.Context) {
 		return
 	}
 
-	token, err := r.deps.TokenManager.Generate(user.ID)
+	token, err := r.deps.TokenManager.Generate(user.ID, user.Role)
 	if err != nil {
 		writeServiceError(c, err)
 		return

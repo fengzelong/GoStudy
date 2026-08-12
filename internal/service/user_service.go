@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"GoStudy/internal/audit"
 	"GoStudy/internal/auth"
 	"GoStudy/internal/cache"
 	"GoStudy/internal/domain"
@@ -26,8 +27,10 @@ type LoginInput struct {
 }
 
 type UserService struct {
-	users repository.UserRepository
-	cache cache.Store
+	users      repository.UserRepository
+	cache      cache.Store
+	audit      audit.Logger
+	adminEmail string
 }
 
 // NewUserService 创建用户服务，业务层只依赖仓储接口。
@@ -36,7 +39,19 @@ func NewUserService(users repository.UserRepository, stores ...cache.Store) *Use
 	if len(stores) > 0 && stores[0] != nil {
 		userCache = stores[0]
 	}
-	return &UserService{users: users, cache: userCache}
+	return &UserService{users: users, cache: userCache, audit: audit.NewMemoryLogger()}
+}
+
+// SetAuditLogger 为服务注入审计记录器，主要用于应用装配和测试。
+func (s *UserService) SetAuditLogger(logger audit.Logger) {
+	if logger != nil {
+		s.audit = logger
+	}
+}
+
+// SetAdminEmail 配置演示管理员邮箱；匹配该邮箱的注册用户会获得管理员角色。
+func (s *UserService) SetAdminEmail(email string) {
+	s.adminEmail = strings.ToLower(strings.TrimSpace(email))
 }
 
 // Register 注册用户，包含基础校验、邮箱去重和密码摘要。
@@ -58,9 +73,14 @@ func (s *UserService) Register(ctx context.Context, input RegisterUserInput) (do
 		return domain.User{}, err
 	}
 
+	role := domain.UserRoleUser
+	if email != "" && email == s.adminEmail {
+		role = domain.UserRoleAdmin
+	}
 	return s.users.CreateUser(ctx, domain.User{
 		Name:         name,
 		Email:        email,
+		Role:         role,
 		PasswordHash: passwordHash,
 	})
 }
@@ -83,8 +103,23 @@ func (s *UserService) Login(ctx context.Context, input LoginInput) (domain.User,
 	if !ok {
 		return domain.User{}, fmt.Errorf("%w: email or password is wrong", ErrNotFound)
 	}
+	_ = s.audit.Record(ctx, audit.Entry{Action: "auth.login", ActorID: user.ID, Resource: "user"})
 
 	return user, nil
+}
+
+// PromoteAdmin 将指定邮箱用户设为管理员，供应用启动时初始化演示管理员。
+func (s *UserService) PromoteAdmin(ctx context.Context, email string) error {
+	user, err := s.users.FindUserByEmail(ctx, strings.ToLower(strings.TrimSpace(email)))
+	if errors.Is(err, repository.ErrNotFound) {
+		return nil
+	}
+	if err != nil || user.Role == domain.UserRoleAdmin {
+		return err
+	}
+	user.Role = domain.UserRoleAdmin
+	_, err = s.users.UpdateUser(ctx, user)
+	return err
 }
 
 // UserPage 是用户列表及其分页信息。

@@ -38,6 +38,7 @@ func main() {
 		RabbitMQQueue:   config.Env("RABBITMQ_QUEUE", ""),
 		TokenSecret:     config.Env("APP_TOKEN_SECRET", "gostudy-dev-secret"),
 		TokenTTL:        tokenTTL,
+		AdminEmail:      config.Env("APP_ADMIN_EMAIL", ""),
 		ShutdownTimeout: shutdownTimeout,
 	}
 

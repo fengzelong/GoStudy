@@ -1,6 +1,6 @@
 # 项目迭代计划
 
-更新时间：2026-07-08
+更新时间：2026-08-12
 
 这份规划覆盖 GoStudy 仓库里尚未整理或尚未补齐的部分，重点关注基础学习示例、
 目录文档、测试覆盖和工程化检查。它与
@@ -32,6 +32,9 @@
   `ServeMux`。
 - 已抽出 `grpc/client` 客户端求和调用函数，并使用内存 listener 补齐本地 gRPC
   server 调用测试。
+- 已完成企业骨架业务可用性：当前用户资料、任务归属隔离、用户与任务分页、稳定业务错误码。
+- 已完成企业骨架外部基础设施适配：可选 Redis 用户资料缓存、RabbitMQ 任务事件和实时依赖健康检查；默认关闭，不影响本地运行。
+- 已完成企业骨架认证与权限：bcrypt 密码摘要、HS256 JWT、管理员角色控制和内存审计记录。
 - 已通过根模块回归：
 
 ```powershell
@@ -80,14 +83,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 
 - `gmp`
 
-### 文档缺口
+### 当前文档状态
 
-- 一级目录以下没有 `README`：`algorithm`、`array`、`designpattern`、`encrypt`、
-  `log`、`runtime`、`study`、`task`、`http`、`goroutine`、`sync`、`gmp`、
-  `tcp`、`udp`、`grpc`、`proto`、`rpc`。
-- `cmd/server` 与 `internal/*` 没有模块级 README，仅靠根 `docs/enterprise-app.md`
-  说明。
-- 根 `README.md` 的目录说明只到一级目录，没有体现子目录结构。
+- 常用学习主题、网络示例和 `cmd/server` 均已补充 README。
+- 根 `README.md` 已提供二级目录导航，并标注外部服务示例。
+- 企业骨架的配置、接口、错误码和可选基础设施说明见 `docs/enterprise-app.md`。
 
 ### 代码质量细节
 
@@ -147,7 +147,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 | 列表分页 | 用户列表、任务列表支持 `page`、`page_size` | 已完成 |
 | 统一错误码 | 业务错误码与 HTTP 状态码分离 | 已完成 |
 
-完成后进入 roadmap 的“第二阶段：外部基础设施”。
+已完成 roadmap 的“第二阶段：外部基础设施”，当前进入认证与权限阶段。
 
 ## 第五阶段：示例能力拓展（可选）
 
@@ -160,9 +160,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 
 ## 推荐推进顺序
 
-1. **下一步**：进入企业骨架第一阶段，优先实现任务归属隔离和分页。
-2. **随后**：补充当前用户资料接口 `GET /api/v1/me` 和统一业务错误码。
-3. **后续**：进入外部基础设施阶段，保持 Redis 和 RabbitMQ 默认关闭。
+1. **下一步**：补充 OpenAPI 文档和可选 MySQL 集成测试。
+2. **随后**：提供 Docker Compose，编排 MySQL、Redis、RabbitMQ 本地依赖。
+3. **后续**：补充 CI 检查示例与审计记录的查询、持久化能力。
 
 ## 约束
 

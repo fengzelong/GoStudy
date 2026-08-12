@@ -17,6 +17,7 @@ type UserRepository interface {
 	GetUser(ctx context.Context, id int64) (domain.User, error)
 	FindUserByEmail(ctx context.Context, email string) (domain.User, error)
 	ListUsers(ctx context.Context) ([]domain.User, error)
+	UpdateUser(ctx context.Context, user domain.User) (domain.User, error)
 }
 
 type TaskRepository interface {
@@ -95,6 +96,17 @@ func (s *MemoryStore) ListUsers(ctx context.Context) ([]domain.User, error) {
 		return users[i].ID < users[j].ID
 	})
 	return users, nil
+}
+
+// UpdateUser 更新已有用户，用于角色调整等管理操作。
+func (s *MemoryStore) UpdateUser(ctx context.Context, user domain.User) (domain.User, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.users[user.ID]; !ok {
+		return domain.User{}, ErrNotFound
+	}
+	s.users[user.ID] = user
+	return user, nil
 }
 
 // CreateTask 创建任务并分配自增 ID。
