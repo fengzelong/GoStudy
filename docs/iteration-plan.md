@@ -125,27 +125,27 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 | `grpc/client` 测试 | 抽出客户端调用函数后补本地 gRPC server 测试 | 已完成 |
 | 独立子模块测试开关 | 外部服务缺失时默认跳过，手动开启时跑真实依赖 | 已完成 |
 
-## 第三阶段：目录文档补齐
+## 第三阶段：目录文档补齐（已完成）
 
 目标：让新人能根据 README 找到示例、命令和前置条件。
 
 | 任务 | 说明 | 验收方式 |
 | --- | --- | --- |
-| 根 `README.md` 升级 | 二级目录也列出来；标注哪些需要外部服务 | 表格里能看到 `algorithm/binsearch` 等 |
-| 缺 README 的目录补 README | 优先补 `algorithm`、`array`、`designpattern`、`goroutine`、`sync`、`gmp`、`tcp`、`udp`、`grpc`、`proto`、`rpc` | `rg --files -g README.md` 数量增加 |
-| `cmd/server` 模块说明 | 简要介绍 `cmd` 与 `internal` 各包职责 | 链接到 `docs/enterprise-app.md` |
-| 增加 `CHANGELOG.md` | 记录每个阶段代表性提交 | 至少包含观察者目录修正和 Gin 示例增强 |
+| 根 `README.md` 升级 | 二级目录也列出来；标注哪些需要外部服务 | 已完成 |
+| 缺 README 的目录补 README | 为学习专题和网络目录补充运行、测试及前置条件说明 | 已完成 |
+| `cmd/server` 模块说明 | 简要介绍 `cmd` 与 `internal` 各包职责 | 已完成 |
+| 增加 `CHANGELOG.md` | 记录每个阶段代表性提交 | 已完成 |
 
-## 第四阶段：企业骨架第一阶段
+## 第四阶段：企业骨架第一阶段（已完成）
 
 目标：把 [enterprise-roadmap.md](enterprise-roadmap.md) 中的“业务可用性”落地。
 
 | 任务 | 说明 | 验收方式 |
 | --- | --- | --- |
-| 用户资料查询 | 新增 `GET /api/v1/me` | 路由测试覆盖未登录、已登录 |
-| 任务归属隔离 | 当前用户只能查看和修改自己的任务 | 路由测试覆盖跨用户访问被拒绝 |
-| 列表分页 | 用户列表、任务列表支持 `page`、`page_size` | 服务层和路由层测试覆盖默认值、边界值 |
-| 统一错误码 | 业务错误码与 HTTP 状态码分离 | 文档列出错误码表，测试断言响应结构 |
+| 用户资料查询 | 新增 `GET /api/v1/me` | 已完成 |
+| 任务归属隔离 | 当前用户只能查看和修改自己的任务 | 已完成 |
+| 列表分页 | 用户列表、任务列表支持 `page`、`page_size` | 已完成 |
+| 统一错误码 | 业务错误码与 HTTP 状态码分离 | 已完成 |
 
 完成后进入 roadmap 的“第二阶段：外部基础设施”。
 
@@ -160,12 +160,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 
 ## 推荐推进顺序
 
-1. **立刻**：进入第三阶段目录文档补齐，优先补常用学习目录 README。
-2. **1 周内**：写 `algorithm`、`array`、`designpattern`、`goroutine`、`sync`、
-   `gmp` README。
-3. **1~2 周**：补 `tcp`、`udp`、`grpc`、`proto`、`rpc` README，并升级根
-   `README.md` 的二级目录说明。
-4. **2~3 周**：进入企业骨架第一阶段（`/me`、任务归属、分页、错误码）。
+1. **下一步**：进入企业骨架第一阶段，优先实现任务归属隔离和分页。
+2. **随后**：补充当前用户资料接口 `GET /api/v1/me` 和统一业务错误码。
+3. **后续**：进入外部基础设施阶段，保持 Redis 和 RabbitMQ 默认关闭。
 
 ## 约束
 

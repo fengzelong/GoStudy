@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -19,6 +20,7 @@ type Dependencies struct {
 	TokenManager *auth.Manager
 	UserService  *service.UserService
 	TaskService  *service.TaskService
+	Health       func() map[string]string
 }
 
 type Router struct {
@@ -45,10 +47,14 @@ func (r *Router) Engine() *gin.Engine {
 // register 区分公开接口和受保护接口，避免鉴权逻辑散落在处理函数里。
 func (r *Router) register() {
 	r.engine.GET("/health", func(c *gin.Context) {
-		response.OK(c, gin.H{
+		data := gin.H{
 			"name": r.deps.AppName,
 			"env":  r.deps.Env,
-		})
+		}
+		if r.deps.Health != nil {
+			data["dependencies"] = r.deps.Health()
+		}
+		response.OK(c, data)
 	})
 
 	api := r.engine.Group("/api/v1")
@@ -59,6 +65,7 @@ func (r *Router) register() {
 		protected := api.Group("")
 		protected.Use(middleware.Auth(r.deps.TokenManager))
 		{
+			protected.GET("/me", r.getCurrentUser)
 			protected.GET("/users", r.listUsers)
 			protected.POST("/tasks", r.createTask)
 			protected.GET("/tasks", r.listTasks)
@@ -69,6 +76,16 @@ func (r *Router) register() {
 	r.engine.NoRoute(func(c *gin.Context) {
 		response.Error(c, http.StatusNotFound, "route not found")
 	})
+}
+
+// getCurrentUser 返回当前认证用户的资料。
+func (r *Router) getCurrentUser(c *gin.Context) {
+	user, err := r.deps.UserService.Get(c.Request.Context(), currentUserID(c))
+	if err != nil {
+		writeServiceError(c, err)
+		return
+	}
+	response.OK(c, user)
 }
 
 // createUser 负责 HTTP 入参绑定，业务规则交给 service 处理。
@@ -114,7 +131,11 @@ func (r *Router) login(c *gin.Context) {
 
 // listUsers 返回用户列表，当前属于受保护接口。
 func (r *Router) listUsers(c *gin.Context) {
-	users, err := r.deps.UserService.List(c.Request.Context())
+	page, ok := pageInput(c)
+	if !ok {
+		return
+	}
+	users, err := r.deps.UserService.List(c.Request.Context(), page)
 	if err != nil {
 		writeServiceError(c, err)
 		return
@@ -130,7 +151,7 @@ func (r *Router) createTask(c *gin.Context) {
 		return
 	}
 
-	task, err := r.deps.TaskService.Create(c.Request.Context(), req)
+	task, err := r.deps.TaskService.Create(c.Request.Context(), currentUserID(c), req)
 	if err != nil {
 		writeServiceError(c, err)
 		return
@@ -140,7 +161,11 @@ func (r *Router) createTask(c *gin.Context) {
 
 // listTasks 返回任务列表。
 func (r *Router) listTasks(c *gin.Context) {
-	tasks, err := r.deps.TaskService.List(c.Request.Context())
+	page, ok := pageInput(c)
+	if !ok {
+		return
+	}
+	tasks, err := r.deps.TaskService.List(c.Request.Context(), currentUserID(c), page)
 	if err != nil {
 		writeServiceError(c, err)
 		return
@@ -156,7 +181,7 @@ func (r *Router) completeTask(c *gin.Context) {
 		return
 	}
 
-	task, err := r.deps.TaskService.Complete(c.Request.Context(), id)
+	task, err := r.deps.TaskService.Complete(c.Request.Context(), currentUserID(c), id)
 	if err != nil {
 		writeServiceError(c, err)
 		return
@@ -168,12 +193,46 @@ func (r *Router) completeTask(c *gin.Context) {
 func writeServiceError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrInvalidInput):
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.ErrorWithCode(c, http.StatusBadRequest, response.CodeInvalidInput, err.Error())
 	case errors.Is(err, service.ErrConflict):
-		response.Error(c, http.StatusConflict, err.Error())
+		response.ErrorWithCode(c, http.StatusConflict, response.CodeConflict, err.Error())
 	case errors.Is(err, service.ErrNotFound):
-		response.Error(c, http.StatusNotFound, err.Error())
+		response.ErrorWithCode(c, http.StatusNotFound, response.CodeNotFound, err.Error())
+	case errors.Is(err, service.ErrForbidden):
+		response.ErrorWithCode(c, http.StatusForbidden, response.CodeForbidden, err.Error())
 	default:
-		response.Error(c, http.StatusInternalServerError, "internal server error")
+		response.ErrorWithCode(c, http.StatusInternalServerError, response.CodeInternal, "internal server error")
 	}
+}
+
+func currentUserID(c *gin.Context) int64 {
+	userID, _ := c.Get(middleware.UserIDKey)
+	id, _ := userID.(int64)
+	return id
+}
+
+func pageInput(c *gin.Context) (service.PageInput, bool) {
+	page, err := queryPositiveInt(c, "page")
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return service.PageInput{}, false
+	}
+	pageSize, err := queryPositiveInt(c, "page_size")
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return service.PageInput{}, false
+	}
+	return service.PageInput{Page: page, PageSize: pageSize}, true
+}
+
+func queryPositiveInt(c *gin.Context, key string) (int, error) {
+	value := c.Query(key)
+	if value == "" {
+		return 0, nil
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 1 {
+		return 0, fmt.Errorf("invalid %s", key)
+	}
+	return parsed, nil
 }

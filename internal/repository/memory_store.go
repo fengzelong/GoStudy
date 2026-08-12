@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"sort"
 	"sync"
 	"time"
 
@@ -90,6 +91,9 @@ func (s *MemoryStore) ListUsers(ctx context.Context) ([]domain.User, error) {
 	for _, user := range s.users {
 		users = append(users, user)
 	}
+	sort.Slice(users, func(i, j int) bool {
+		return users[i].ID < users[j].ID
+	})
 	return users, nil
 }
 
@@ -128,6 +132,9 @@ func (s *MemoryStore) ListTasks(ctx context.Context) ([]domain.Task, error) {
 	for _, task := range s.tasks {
 		tasks = append(tasks, task)
 	}
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].ID < tasks[j].ID
+	})
 	return tasks, nil
 }
 

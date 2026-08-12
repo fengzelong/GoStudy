@@ -62,6 +62,15 @@ func (s *GormStore) Close() error {
 	return sqlDB.Close()
 }
 
+// Health 检查底层 MySQL 连接池是否可用。
+func (s *GormStore) Health(ctx context.Context) string {
+	sqlDB, err := s.db.DB()
+	if err != nil || sqlDB.PingContext(ctx) != nil {
+		return "down"
+	}
+	return "ok"
+}
+
 // CreateUser 持久化用户并返回带数据库主键的领域对象。
 func (s *GormStore) CreateUser(ctx context.Context, user domain.User) (domain.User, error) {
 	model := userModel{

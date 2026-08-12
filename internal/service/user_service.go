@@ -2,11 +2,14 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"GoStudy/internal/auth"
+	"GoStudy/internal/cache"
 	"GoStudy/internal/domain"
 	"GoStudy/internal/repository"
 )
@@ -24,11 +27,16 @@ type LoginInput struct {
 
 type UserService struct {
 	users repository.UserRepository
+	cache cache.Store
 }
 
 // NewUserService 创建用户服务，业务层只依赖仓储接口。
-func NewUserService(users repository.UserRepository) *UserService {
-	return &UserService{users: users}
+func NewUserService(users repository.UserRepository, stores ...cache.Store) *UserService {
+	userCache := cache.NewNoop()
+	if len(stores) > 0 && stores[0] != nil {
+		userCache = stores[0]
+	}
+	return &UserService{users: users, cache: userCache}
 }
 
 // Register 注册用户，包含基础校验、邮箱去重和密码摘要。
@@ -79,7 +87,42 @@ func (s *UserService) Login(ctx context.Context, input LoginInput) (domain.User,
 	return user, nil
 }
 
-// List 返回用户列表，后续可以在这里加入分页和权限规则。
-func (s *UserService) List(ctx context.Context) ([]domain.User, error) {
-	return s.users.ListUsers(ctx)
+// UserPage 是用户列表及其分页信息。
+type UserPage struct {
+	PageMeta
+	Items []domain.User `json:"items"`
+}
+
+// Get 返回指定用户，用于当前用户资料查询等场景。
+func (s *UserService) Get(ctx context.Context, id int64) (domain.User, error) {
+	key := fmt.Sprintf("user:%d", id)
+	if value, ok, err := s.cache.Get(ctx, key); err == nil && ok {
+		var user domain.User
+		if err := json.Unmarshal(value, &user); err == nil {
+			return user, nil
+		}
+	}
+	user, err := s.users.GetUser(ctx, id)
+	if errors.Is(err, repository.ErrNotFound) {
+		return domain.User{}, fmt.Errorf("%w: user not found", ErrNotFound)
+	}
+	if err == nil {
+		if value, marshalErr := json.Marshal(user); marshalErr == nil {
+			_ = s.cache.Set(ctx, key, value, time.Minute)
+		}
+	}
+	return user, err
+}
+
+// List 返回分页后的用户列表。
+func (s *UserService) List(ctx context.Context, input PageInput) (UserPage, error) {
+	users, err := s.users.ListUsers(ctx)
+	if err != nil {
+		return UserPage{}, err
+	}
+	meta, start, end, err := normalizePage(input, len(users))
+	if err != nil {
+		return UserPage{}, err
+	}
+	return UserPage{PageMeta: meta, Items: users[start:end]}, nil
 }
