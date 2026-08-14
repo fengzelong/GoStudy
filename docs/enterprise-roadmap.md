@@ -44,22 +44,22 @@
 | 角色权限 | 增加管理员、普通用户角色 | 已完成：管理员用户列表访问控制 |
 | 审计日志 | 记录登录、任务状态变更等关键操作 | 已完成：内存审计记录与单元测试 |
 
-## 第四阶段：工程化质量
+## 第四阶段：工程化质量（已完成）
 
 目标：补齐企业项目常见的维护能力。
 
 | 任务 | 说明 | 验收方式 |
 | --- | --- | --- |
-| OpenAPI 文档 | 输出接口文档或示例请求集合 | README 链接文档入口 |
-| 集成测试 | 使用可选 MySQL 环境变量运行真实仓储测试 | 默认跳过，无环境时不影响 `go test ./...` |
-| Docker Compose | 提供 MySQL、Redis、RabbitMQ 本地依赖编排 | 文档说明启动和清理方式 |
-| CI 检查说明 | 将 `scripts/check.ps1` 作为 CI 门禁示例 | 文档列出 CI 执行命令 |
+| OpenAPI 文档 | 输出接口文档或示例请求集合 | 已完成：`docs/openapi.yaml` 与 README 入口 |
+| 集成测试 | 使用可选 MySQL 环境变量运行真实仓储测试 | 已完成：`APP_INTEGRATION_MYSQL=1` 显式开启 |
+| Docker Compose | 提供 MySQL、Redis、RabbitMQ 本地依赖编排 | 已完成：根目录 Compose 与启动、清理说明 |
+| CI 检查说明 | 将 `scripts/check.ps1` 作为 CI 门禁示例 | 已完成：GitHub Actions 默认完整检查 |
 
 ## 推荐推进顺序
 
-1. 进入第四阶段，先补 OpenAPI 文档和可选 MySQL 集成测试。
-2. 提供 Docker Compose，编排 MySQL、Redis、RabbitMQ 本地依赖。
-3. 以 `scripts/check.ps1` 为基础补充 CI 检查示例。
+1. 为审计记录增加查询和持久化能力。
+2. 根据多服务场景评估 JWT 刷新、吊销或统一认证中心。
+3. 为 Redis、RabbitMQ 增加可选端到端集成测试。
 
 ## 约束
 

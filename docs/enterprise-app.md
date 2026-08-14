@@ -74,6 +74,21 @@ $env:APP_SHUTDOWN_TIMEOUT="10s"
 go run ./cmd/server
 ```
 
+## 可选 MySQL 集成测试
+
+企业骨架的 GORM 仓储集成测试默认跳过。它会创建、更新、查询并清理测试用户和任务；仅应连接专用测试库，例如 Compose 默认创建的 `go_test`。
+
+先启动 MySQL 依赖，再显式开启测试：
+
+```powershell
+docker compose up -d mysql
+$env:APP_INTEGRATION_MYSQL="1"
+$env:MYSQL_DSN="root:password@tcp(127.0.0.1:3306)/go_test?charset=utf8mb4&parseTime=True&loc=Local"
+go test ./internal/repository -run TestGormStoreIntegration -count=1
+```
+
+不设置 `APP_INTEGRATION_MYSQL=1` 时，默认的 `go test ./...` 和 `scripts/test.ps1` 不会连接 MySQL。
+
 切换到 MySQL：
 
 ```powershell
@@ -105,7 +120,54 @@ go run ./cmd/server
 
 `GET /health` 的 `data.dependencies` 会返回 `storage`、`cache` 和 `mq` 的状态。关闭或内存模式没有外部依赖时会返回 `skipped` 或 `ok`。
 
+## Docker Compose 本地依赖
+
+仓库根目录的 [`docker-compose.yml`](../docker-compose.yml) 提供 MySQL 8、Redis 7 和
+RabbitMQ 3（含管理界面）编排。它只启动依赖服务，不会启动 Go 应用，也不会改变默认的
+内存运行模式。
+
+启动依赖：
+
+```sh
+docker compose up -d
+```
+
+查看状态和日志：
+
+```sh
+docker compose ps
+docker compose logs -f mysql redis rabbitmq
+```
+
+停止并保留数据卷：
+
+```sh
+docker compose down
+```
+
+如需同时删除本地容器数据卷：
+
+```sh
+docker compose down -v
+```
+
+容器启动后，RabbitMQ 管理界面为 `http://127.0.0.1:15672`，默认账号密码均为 `guest`。
+启用完整外部依赖的应用配置：
+
+```powershell
+$env:APP_STORAGE="mysql"
+$env:MYSQL_DSN="root:password@tcp(127.0.0.1:3306)/go_test?charset=utf8mb4&parseTime=True&loc=Local"
+$env:APP_CACHE="redis"
+$env:REDIS_ADDR="127.0.0.1:6379"
+$env:APP_MQ="rabbitmq"
+$env:RABBITMQ_URL="amqp://guest:guest@127.0.0.1:5672/"
+$env:RABBITMQ_QUEUE="gostudy.task.events"
+go run ./cmd/server
+```
+
 ## 接口清单
+
+机器可读的完整接口契约见 [OpenAPI 文档](openapi.yaml)。
 
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
@@ -189,8 +251,8 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/tasks/1/complete \
 
 ## 后续升级方向
 
-1. 补充 OpenAPI、Docker Compose 与可选 MySQL 集成测试。
-2. 为审计记录增加查询接口和持久化实现。
-3. 根据多服务场景评估 JWT 刷新、吊销或统一认证中心。
+1. 为审计记录增加查询接口和持久化实现。
+2. 根据多服务场景评估 JWT 刷新、吊销或统一认证中心。
+3. 为 Redis、RabbitMQ 增加可选端到端集成测试。
 
 更完整的阶段拆分和验收方式见 `docs/enterprise-roadmap.md`。

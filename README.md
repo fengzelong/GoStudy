@@ -112,12 +112,14 @@ go run .
 
 - [项目迭代计划](docs/iteration-plan.md)：全仓库的文档、测试和示例整理计划。
 - [企业应用骨架说明](docs/enterprise-app.md)：企业服务的分层、配置、接口和运行方式。
+- [OpenAPI 文档](docs/openapi.yaml)：企业服务接口、鉴权、分页和错误响应约定。
 - [企业应用迭代规划](docs/enterprise-roadmap.md)：企业服务后续功能规划。
 - [变更记录](CHANGELOG.md)：代表性迭代记录。
 
 ## 注意事项
 
 - 外部服务连接示例见根目录 `.env.example`。
+- 使用 `docker compose up -d` 可启动 MySQL、Redis、RabbitMQ 本地依赖；具体配置见企业应用骨架说明。
 - Git 会忽略生成的二进制文件、日志、trace 文件、本地缓存、IDE 配置和运行时上传文件。
 - 部分示例需要先启动 MySQL、Redis、RabbitMQ 或配套的网络客户端/服务端。
 - 协作与编码约定见 `AGENTS.md`。

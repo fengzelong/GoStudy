@@ -14,6 +14,8 @@
 - 新增当前用户资料接口、用户与任务列表分页、任务归属隔离和稳定业务错误码。
 - 增加可选的 Redis 用户资料缓存、RabbitMQ 任务事件与依赖健康状态；默认保持关闭。
 - 使用 bcrypt 和 HS256 JWT 升级认证，增加管理员角色控制与内存审计记录。
+- 增加 OpenAPI 接口契约及 MySQL、Redis、RabbitMQ 本地 Docker Compose 编排。
+- 增加可选 MySQL 仓储集成测试和 GitHub Actions 完整检查工作流。
 
 ## 2026-07-08
 

@@ -35,6 +35,8 @@
 - 已完成企业骨架业务可用性：当前用户资料、任务归属隔离、用户与任务分页、稳定业务错误码。
 - 已完成企业骨架外部基础设施适配：可选 Redis 用户资料缓存、RabbitMQ 任务事件和实时依赖健康检查；默认关闭，不影响本地运行。
 - 已完成企业骨架认证与权限：bcrypt 密码摘要、HS256 JWT、管理员角色控制和内存审计记录。
+- 已补充企业骨架 OpenAPI 接口契约与 MySQL、Redis、RabbitMQ 的 Docker Compose 本地依赖编排。
+- 已补充可选 MySQL 仓储集成测试和 GitHub Actions 完整检查工作流。
 - 已通过根模块回归：
 
 ```powershell
@@ -160,9 +162,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 
 ## 推荐推进顺序
 
-1. **下一步**：补充 OpenAPI 文档和可选 MySQL 集成测试。
-2. **随后**：提供 Docker Compose，编排 MySQL、Redis、RabbitMQ 本地依赖。
-3. **后续**：补充 CI 检查示例与审计记录的查询、持久化能力。
+1. **下一步**：补充审计记录的查询、持久化能力。
+2. **随后**：评估 JWT 刷新、吊销或统一认证中心。
+3. **后续**：补充 Redis、RabbitMQ 的可选端到端集成测试。
 
 ## 约束
 
