@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"GoStudy/internal/audit"
 	"GoStudy/internal/domain"
 )
 
@@ -37,6 +38,7 @@ func TestGormStoreIntegration(t *testing.T) {
 		t.Fatalf("创建用户失败: %v", err)
 	}
 	defer func() {
+		_ = store.db.WithContext(ctx).Delete(&auditModel{}, "actor_id = ?", user.ID).Error
 		_ = store.db.WithContext(ctx).Delete(&taskModel{}, "owner_id = ?", user.ID).Error
 		_ = store.db.WithContext(ctx).Delete(&userModel{}, user.ID).Error
 	}()
@@ -75,5 +77,17 @@ func TestGormStoreIntegration(t *testing.T) {
 	storedTask, err := store.GetTask(ctx, task.ID)
 	if err != nil || storedTask.OwnerID != user.ID || storedTask.Status != domain.TaskStatusDone {
 		t.Fatalf("查询任务失败: task=%+v err=%v", storedTask, err)
+	}
+
+	entry := audit.Entry{Action: "task.completed", ActorID: user.ID, Resource: fmt.Sprintf("task:%d", task.ID)}
+	if err := store.Record(ctx, entry); err != nil {
+		t.Fatalf("写入审计记录失败: %v", err)
+	}
+	entries, err := store.List(ctx)
+	if err != nil {
+		t.Fatalf("查询审计记录失败: %v", err)
+	}
+	if len(entries) == 0 || entries[len(entries)-1].Action != entry.Action || entries[len(entries)-1].ActorID != user.ID {
+		t.Fatalf("审计记录不符合预期: %+v", entries)
 	}
 }

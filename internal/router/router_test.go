@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"GoStudy/internal/audit"
 	"GoStudy/internal/auth"
 	"GoStudy/internal/domain"
 	"GoStudy/internal/repository"
@@ -91,12 +92,18 @@ func TestEnterpriseRoutesCurrentUserOwnershipAndPagination(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	store := repository.NewMemoryStore()
+	auditLogger := audit.NewMemoryLogger()
+	userService := service.NewUserService(store)
+	userService.SetAuditLogger(auditLogger)
+	taskService := service.NewTaskService(store, store)
+	taskService.SetAuditLogger(auditLogger)
 	r := New(Dependencies{
 		AppName:      "test",
 		Env:          "test",
 		TokenManager: auth.NewManager("test-secret", time.Hour),
-		UserService:  service.NewUserService(store),
-		TaskService:  service.NewTaskService(store, store),
+		UserService:  userService,
+		TaskService:  taskService,
+		AuditService: service.NewAuditService(auditLogger),
 	})
 
 	aliceToken := registerAndLogin(t, r.Engine(), "Alice", "alice@example.com")
@@ -154,6 +161,17 @@ func TestEnterpriseRoutesCurrentUserOwnershipAndPagination(t *testing.T) {
 		t.Fatalf("expected invalid pagination to fail, got %d: %s", rec.Code, rec.Body.String())
 	}
 	assertResponseCode(t, rec.Body.String(), 40001)
+
+	rec = performRequest(r.Engine(), http.MethodGet, "/api/v1/audits", "", aliceToken)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected ordinary user audit list to be forbidden, got %d: %s", rec.Code, rec.Body.String())
+	}
+	assertResponseCode(t, rec.Body.String(), 40301)
+
+	rec = performRequest(r.Engine(), http.MethodGet, "/api/v1/audits?page=2&page_size=2", "", adminToken)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"total":6`) || !strings.Contains(rec.Body.String(), `"action":"task.created"`) {
+		t.Fatalf("expected paginated audit entries, got %d: %s", rec.Code, rec.Body.String())
+	}
 }
 
 func performRequest(engine http.Handler, method string, path string, body string, token string) *httptest.ResponseRecorder {

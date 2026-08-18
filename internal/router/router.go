@@ -21,6 +21,7 @@ type Dependencies struct {
 	TokenManager *auth.Manager
 	UserService  *service.UserService
 	TaskService  *service.TaskService
+	AuditService *service.AuditService
 	Health       func() map[string]string
 }
 
@@ -68,6 +69,7 @@ func (r *Router) register() {
 		{
 			protected.GET("/me", r.getCurrentUser)
 			protected.GET("/users", middleware.RequireRole(domain.UserRoleAdmin), r.listUsers)
+			protected.GET("/audits", middleware.RequireRole(domain.UserRoleAdmin), r.listAudits)
 			protected.POST("/tasks", r.createTask)
 			protected.GET("/tasks", r.listTasks)
 			protected.PATCH("/tasks/:id/complete", r.completeTask)
@@ -142,6 +144,20 @@ func (r *Router) listUsers(c *gin.Context) {
 		return
 	}
 	response.OK(c, users)
+}
+
+// listAudits 返回管理员可见的审计记录列表。
+func (r *Router) listAudits(c *gin.Context) {
+	page, ok := pageInput(c)
+	if !ok {
+		return
+	}
+	audits, err := r.deps.AuditService.List(c.Request.Context(), page)
+	if err != nil {
+		writeServiceError(c, err)
+		return
+	}
+	response.OK(c, audits)
 }
 
 // createTask 创建任务，任务归属校验放在服务层完成。

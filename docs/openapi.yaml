@@ -13,6 +13,7 @@ tags:
   - name: 用户
   - name: 认证
   - name: 任务
+  - name: 审计
 paths:
   /health:
     get:
@@ -102,6 +103,27 @@ paths:
                 $ref: '#/components/schemas/UserResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /api/v1/audits:
+    get:
+      tags: [审计]
+      summary: 查询审计记录列表
+      description: 仅管理员角色可访问。
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/tasks:
     post:
       tags: [任务]
@@ -262,6 +284,13 @@ components:
         status: { type: string, enum: [pending, done], example: pending }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+    AuditEntry:
+      type: object
+      properties:
+        action: { type: string, example: task.created }
+        actor_id: { type: integer, format: int64, example: 1 }
+        resource: { type: string, example: task:1 }
+        created_at: { type: string, format: date-time }
     ErrorResponse:
       type: object
       required: [code, message]
@@ -318,6 +347,20 @@ components:
             items:
               type: array
               items: { $ref: '#/components/schemas/Task' }
+    AuditPageResponse:
+      type: object
+      properties:
+        code: { type: integer, example: 0 }
+        message: { type: string, example: ok }
+        data:
+          type: object
+          properties:
+            page: { type: integer, example: 1 }
+            page_size: { type: integer, example: 20 }
+            total: { type: integer, example: 1 }
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/AuditEntry' }
     HealthResponse:
       type: object
       properties:

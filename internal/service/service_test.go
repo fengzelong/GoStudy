@@ -156,6 +156,24 @@ func TestServicesRecordAuditEntries(t *testing.T) {
 	}
 }
 
+func TestAuditServiceList(t *testing.T) {
+	ctx := context.Background()
+	logger := audit.NewMemoryLogger()
+	for _, action := range []string{"auth.login", "task.created", "task.completed"} {
+		if err := logger.Record(ctx, audit.Entry{Action: action}); err != nil {
+			t.Fatalf("record audit entry: %v", err)
+		}
+	}
+
+	page, err := NewAuditService(logger).List(ctx, PageInput{Page: 2, PageSize: 2})
+	if err != nil {
+		t.Fatalf("list audit entries: %v", err)
+	}
+	if page.Page != 2 || page.PageSize != 2 || page.Total != 3 || len(page.Items) != 1 || page.Items[0].Action != "task.completed" {
+		t.Fatalf("unexpected audit page: %+v", page)
+	}
+}
+
 func TestUserServiceListPagination(t *testing.T) {
 	ctx := context.Background()
 	store := repository.NewMemoryStore()

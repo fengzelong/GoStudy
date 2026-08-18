@@ -19,6 +19,17 @@ type Logger interface {
 	Record(ctx context.Context, entry Entry) error
 }
 
+// Reader 提供审计记录读取能力，便于后续替换为持久化实现。
+type Reader interface {
+	List(ctx context.Context) ([]Entry, error)
+}
+
+// Store 同时提供审计记录的写入和读取能力。
+type Store interface {
+	Logger
+	Reader
+}
+
 type MemoryLogger struct {
 	mu      sync.RWMutex
 	entries []Entry
@@ -41,4 +52,9 @@ func (l *MemoryLogger) Entries() []Entry {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return append([]Entry(nil), l.entries...)
+}
+
+// List 返回审计记录快照，满足管理端查询和后续持久化抽象。
+func (l *MemoryLogger) List(ctx context.Context) ([]Entry, error) {
+	return l.Entries(), nil
 }

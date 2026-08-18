@@ -15,7 +15,7 @@ GoStudy 是一个 Go 语言学习示例仓库，覆盖基础语法、算法、�
 | gRPC | [`grpc`](grpc)、[`proto`](proto) | 客户端、服务端、protobuf 协议与生成代码 |
 | 数据与消息 | [`gomysql`](gomysql)、[`gorm`](gorm)、[`goredis`](goredis)、[`gorabbitmq`](gorabbitmq) | MySQL、GORM、Redis、RabbitMQ；需要对应本地服务 |
 | 其他专题 | [`encrypt`](encrypt)、[`log`](log)、[`runtime`](runtime)、[`task`](task)、[`gmp`](gmp)、[`study`](study) | 加密、日志、运行时、定时任务、trace 与语法练习 |
-| 企业骨架 | [`cmd/server`](cmd/server)、[`internal`](internal) | 分层、鉴权、分页、任务归属、可选缓存与事件发布 |
+| 企业骨架 | [`cmd/server`](cmd/server)、[`internal`](internal) | 分层、鉴权、分页、任务归属、审计查询、可选缓存与事件发布 |
 
 ## 模块说明
 

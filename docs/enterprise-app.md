@@ -8,12 +8,12 @@
 - `internal/app`：装配配置、仓储、服务和路由。
 - `internal/router`：Gin 路由、版本分组、分页参数和错误响应。
 - `internal/service`：用户和任务业务逻辑、任务归属隔离和分页。
-- `internal/repository`：仓储接口、内存实现和 GORM/MySQL 实现。
+- `internal/repository`：仓储接口、内存实现和 GORM/MySQL 实现；MySQL 模式同时持久化审计记录。
 - `internal/cache`：关闭、内存和 Redis 缓存实现，当前缓存用户资料。
 - `internal/event`：关闭、内存和 RabbitMQ 事件发布器，当前发布任务创建、完成事件。
 - `internal/domain`：用户、任务等领域对象。
 - `internal/auth`：bcrypt 密码摘要和 HS256 JWT 签发校验。
-- `internal/audit`：登录、任务创建和完成的内存审计记录。
+- `internal/audit`：登录、任务创建和完成的内存审计记录，支持管理端分页查询。
 - `internal/logger`：zap 结构化日志和日志切割。
 - `internal/middleware`：请求 ID、CORS、请求日志和鉴权中间件。
 - `internal/response`：统一 JSON 响应。
@@ -97,7 +97,7 @@ $env:MYSQL_DSN="root:password@tcp(127.0.0.1:3306)/go_test?charset=utf8mb4&parseT
 go run ./cmd/server
 ```
 
-MySQL 模式会使用 GORM 自动迁移用户表和任务表。没有启动 MySQL 时，保持默认 `APP_STORAGE=memory` 即可运行全部本地测试。
+MySQL 模式会使用 GORM 自动迁移用户表、任务表和审计记录表；登录、创建任务与完成任务的审计记录会自动持久化。没有启动 MySQL 时，保持默认 `APP_STORAGE=memory` 即可运行全部本地测试。
 
 缓存和消息队列默认关闭，因此也不依赖 Redis 或 RabbitMQ。需要在本地观察缓存和事件行为时，可以使用不需要外部服务的内存实现：
 
@@ -176,6 +176,7 @@ go run ./cmd/server
 | `POST` | `/api/v1/auth/login` | 否 | 登录并取得 Token |
 | `GET` | `/api/v1/me` | 是 | 查询当前用户资料 |
 | `GET` | `/api/v1/users` | 管理员 | 查询用户列表，支持分页 |
+| `GET` | `/api/v1/audits` | 管理员 | 查询审计记录，支持分页 |
 | `POST` | `/api/v1/tasks` | 是 | 创建当前用户的任务 |
 | `GET` | `/api/v1/tasks` | 是 | 查询当前用户的任务，支持分页 |
 | `PATCH` | `/api/v1/tasks/:id/complete` | 是 | 完成任务 |
@@ -188,7 +189,7 @@ go run ./cmd/server
 `admin`；当前管理员可以访问用户列表，普通用户会收到 `40301`。登录签发的是 HS256 JWT，
 其中包含用户 ID、角色、签发时间和过期时间。密码以 bcrypt 摘要保存，接口不会返回密码摘要。
 
-当前会将登录、任务创建和任务完成写入内存审计记录。审计接口和持久化存储将在后续工程化阶段扩展。
+当前会将登录、任务创建和任务完成写入审计记录。默认内存模式仅在进程生命周期内保存；`APP_STORAGE=mysql` 时会持久化到 MySQL。管理员可通过 `GET /api/v1/audits?page=1&page_size=20` 分页查询。
 
 ## 错误码
 
@@ -251,8 +252,7 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/tasks/1/complete \
 
 ## 后续升级方向
 
-1. 为审计记录增加查询接口和持久化实现。
-2. 根据多服务场景评估 JWT 刷新、吊销或统一认证中心。
-3. 为 Redis、RabbitMQ 增加可选端到端集成测试。
+1. 根据多服务场景评估 JWT 刷新、吊销或统一认证中心。
+2. 为 Redis、RabbitMQ 增加可选端到端集成测试。
 
 更完整的阶段拆分和验收方式见 `docs/enterprise-roadmap.md`。

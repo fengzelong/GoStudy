@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"GoStudy/internal/audit"
 	"GoStudy/internal/domain"
 
 	"gorm.io/driver/mysql"
@@ -36,6 +37,15 @@ type taskModel struct {
 	UpdatedAt time.Time         `gorm:"not null"`
 }
 
+// auditModel 是审计记录的持久化模型，避免领域服务依赖 GORM。
+type auditModel struct {
+	ID        int64     `gorm:"primaryKey"`
+	Action    string    `gorm:"size:100;not null"`
+	ActorID   int64     `gorm:"index;not null"`
+	Resource  string    `gorm:"size:255;not null"`
+	CreatedAt time.Time `gorm:"index;not null"`
+}
+
 // NewGormStore 建立 MySQL 连接并自动迁移企业骨架所需表结构。
 func NewGormStore(dsn string) (*GormStore, error) {
 	if dsn == "" {
@@ -47,7 +57,7 @@ func NewGormStore(dsn string) (*GormStore, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&userModel{}, &taskModel{}); err != nil {
+	if err := db.AutoMigrate(&userModel{}, &taskModel{}, &auditModel{}); err != nil {
 		return nil, err
 	}
 
@@ -194,6 +204,34 @@ func (s *GormStore) UpdateTask(ctx context.Context, task domain.Task) (domain.Ta
 	return model.toDomain(), nil
 }
 
+// Record 持久化关键业务操作的审计记录。
+func (s *GormStore) Record(ctx context.Context, entry audit.Entry) error {
+	createdAt := entry.CreatedAt
+	if createdAt.IsZero() {
+		createdAt = time.Now()
+	}
+	return s.db.WithContext(ctx).Create(&auditModel{
+		Action:    entry.Action,
+		ActorID:   entry.ActorID,
+		Resource:  entry.Resource,
+		CreatedAt: createdAt,
+	}).Error
+}
+
+// List 按写入顺序返回审计记录，供管理端分页查询。
+func (s *GormStore) List(ctx context.Context) ([]audit.Entry, error) {
+	var models []auditModel
+	if err := s.db.WithContext(ctx).Order("id ASC").Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	entries := make([]audit.Entry, 0, len(models))
+	for _, model := range models {
+		entries = append(entries, model.toAuditEntry())
+	}
+	return entries, nil
+}
+
 func (m userModel) toDomain() domain.User {
 	return domain.User{
 		ID:           m.ID,
@@ -213,6 +251,15 @@ func (m taskModel) toDomain() domain.Task {
 		Status:    m.Status,
 		CreatedAt: m.CreatedAt,
 		UpdatedAt: m.UpdatedAt,
+	}
+}
+
+func (m auditModel) toAuditEntry() audit.Entry {
+	return audit.Entry{
+		Action:    m.Action,
+		ActorID:   m.ActorID,
+		Resource:  m.Resource,
+		CreatedAt: m.CreatedAt,
 	}
 }
 

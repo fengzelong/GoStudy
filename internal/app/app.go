@@ -63,9 +63,12 @@ func New(cfg Config) (*App, error) {
 
 	userService := service.NewUserService(store, cacheStore)
 	taskService := service.NewTaskService(store, store, publisher)
-	auditLogger := audit.NewMemoryLogger()
-	userService.SetAuditLogger(auditLogger)
-	taskService.SetAuditLogger(auditLogger)
+	auditStore := audit.Store(audit.NewMemoryLogger())
+	if persistentAuditStore, ok := store.(audit.Store); ok {
+		auditStore = persistentAuditStore
+	}
+	userService.SetAuditLogger(auditStore)
+	taskService.SetAuditLogger(auditStore)
 	userService.SetAdminEmail(cfg.AdminEmail)
 	if err := userService.PromoteAdmin(context.Background(), cfg.AdminEmail); err != nil {
 		_ = cacheStore.Close()
@@ -84,6 +87,7 @@ func New(cfg Config) (*App, error) {
 			TokenManager: tokenManager,
 			UserService:  userService,
 			TaskService:  taskService,
+			AuditService: service.NewAuditService(auditStore),
 			Health: func() map[string]string {
 				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 				defer cancel()
