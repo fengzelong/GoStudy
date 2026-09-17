@@ -12,7 +12,7 @@
 - `internal/cache`：关闭、内存和 Redis 缓存实现，当前缓存用户资料。
 - `internal/event`：关闭、内存和 RabbitMQ 事件发布器，当前发布任务创建、完成事件。
 - `internal/domain`：用户、任务等领域对象。
-- `internal/auth`：bcrypt 密码摘要和 HS256 JWT 签发校验。
+- `internal/auth`：bcrypt 密码摘要、HS256 JWT 签发、轮换续期和内存吊销。
 - `internal/audit`：登录、任务创建和完成的内存审计记录，支持管理端分页查询。
 - `internal/logger`：zap 结构化日志和日志切割。
 - `internal/middleware`：请求 ID、CORS、请求日志和鉴权中间件。
@@ -33,7 +33,7 @@
 | `internal/cache` | 隔离缓存实现，支持关闭、内存和 Redis 三种模式 |
 | `internal/event` | 隔离事件发布实现，支持关闭、内存和 RabbitMQ 三种模式 |
 | `internal/domain` | 保存业务对象，不依赖 Gin、GORM 等框架 |
-| `internal/auth` | 使用 bcrypt 校验密码并签发包含角色声明的 HS256 JWT |
+| `internal/auth` | 使用 bcrypt 校验密码，签发、轮换和吊销包含角色声明的 HS256 JWT |
 | `internal/audit` | 记录登录与任务状态变更等关键操作 |
 
 这样的拆分让示例可以先用内存仓储学习流程，再平滑切换到 MySQL。
@@ -88,6 +88,25 @@ go test ./internal/repository -run TestGormStoreIntegration -count=1
 ```
 
 不设置 `APP_INTEGRATION_MYSQL=1` 时，默认的 `go test ./...` 和 `scripts/test.ps1` 不会连接 MySQL。
+
+## 可选 Redis 与 RabbitMQ 集成测试
+
+Redis 和 RabbitMQ 的集成测试同样默认跳过。Redis 测试会读写并删除带有唯一前缀的缓存键；
+RabbitMQ 测试会在唯一的临时队列中发布并读取一条事件，结束时删除该队列。
+
+先启动依赖，再显式开启测试：
+
+```powershell
+docker compose up -d redis rabbitmq
+$env:APP_INTEGRATION_REDIS="1"
+$env:REDIS_ADDR="127.0.0.1:6379"
+go test ./internal/cache -run TestRedisStoreIntegration -count=1
+
+$env:APP_INTEGRATION_RABBITMQ="1"
+$env:RABBITMQ_URL="amqp://guest:guest@127.0.0.1:5672/"
+$env:RABBITMQ_QUEUE="gostudy.integration.events"
+go test ./internal/event -run TestRabbitMQPublisherIntegration -count=1
+```
 
 切换到 MySQL：
 
@@ -174,6 +193,8 @@ go run ./cmd/server
 | `GET` | `/health` | 否 | 健康检查 |
 | `POST` | `/api/v1/users` | 否 | 注册用户 |
 | `POST` | `/api/v1/auth/login` | 否 | 登录并取得 Token |
+| `POST` | `/api/v1/auth/refresh` | 是 | 轮换当前有效 Token |
+| `POST` | `/api/v1/auth/logout` | 是 | 吊销当前 Token |
 | `GET` | `/api/v1/me` | 是 | 查询当前用户资料 |
 | `GET` | `/api/v1/users` | 管理员 | 查询用户列表，支持分页 |
 | `GET` | `/api/v1/audits` | 管理员 | 查询审计记录，支持分页 |
@@ -187,7 +208,11 @@ go run ./cmd/server
 
 普通注册用户的角色为 `user`。设置 `APP_ADMIN_EMAIL` 后，与该邮箱匹配的用户角色为
 `admin`；当前管理员可以访问用户列表，普通用户会收到 `40301`。登录签发的是 HS256 JWT，
-其中包含用户 ID、角色、签发时间和过期时间。密码以 bcrypt 摘要保存，接口不会返回密码摘要。
+其中包含用户 ID、角色、签发时间、过期时间和唯一标识。密码以 bcrypt 摘要保存，接口不会返回密码摘要。
+
+已登录且尚未过期的 Token 可调用 `POST /api/v1/auth/refresh` 轮换，旧 Token 会立即吊销；调用
+`POST /api/v1/auth/logout` 也会吊销当前 Token。当前吊销列表保存在内存中，服务重启后会清空；在多实例
+部署中，应改用 Redis 或统一认证中心共享吊销状态。
 
 当前会将登录、任务创建和任务完成写入审计记录。默认内存模式仅在进程生命周期内保存；`APP_STORAGE=mysql` 时会持久化到 MySQL。管理员可通过 `GET /api/v1/audits?page=1&page_size=20` 分页查询。
 
@@ -227,6 +252,20 @@ curl -X POST http://127.0.0.1:8080/api/v1/auth/login \
   -d '{"email":"alice@example.com","password":"secret1"}'
 ```
 
+轮换 Token：
+
+```sh
+curl -X POST http://127.0.0.1:8080/api/v1/auth/refresh \
+  -H "Authorization: Bearer <token>"
+```
+
+退出并吊销 Token：
+
+```sh
+curl -X POST http://127.0.0.1:8080/api/v1/auth/logout \
+  -H "Authorization: Bearer <token>"
+```
+
 创建任务：
 
 ```sh
@@ -252,7 +291,7 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/tasks/1/complete \
 
 ## 后续升级方向
 
-1. 根据多服务场景评估 JWT 刷新、吊销或统一认证中心。
-2. 为 Redis、RabbitMQ 增加可选端到端集成测试。
+1. 根据多服务场景将内存吊销列表替换为 Redis 或统一认证中心。
+2. 将外部依赖集成测试纳入需要这些服务的 CI 环境。
 
 更完整的阶段拆分和验收方式见 `docs/enterprise-roadmap.md`。

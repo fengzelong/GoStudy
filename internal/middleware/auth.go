@@ -13,6 +13,7 @@ import (
 
 const UserIDKey = "user_id"
 const UserRoleKey = "user_role"
+const TokenClaimsKey = "token_claims"
 
 // Auth 校验 Bearer Token，并把用户 ID 放入 Gin 上下文供后续处理使用。
 func Auth(tokens *auth.Manager) gin.HandlerFunc {
@@ -33,6 +34,7 @@ func Auth(tokens *auth.Manager) gin.HandlerFunc {
 
 		c.Set(UserIDKey, claims.Subject)
 		c.Set(UserRoleKey, claims.Role)
+		c.Set(TokenClaimsKey, claims)
 		c.Next()
 	}
 }

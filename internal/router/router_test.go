@@ -88,6 +88,41 @@ func TestHealthDependencies(t *testing.T) {
 	assertResponseCode(t, rec.Body.String(), response.CodeOK)
 }
 
+func TestEnterpriseRoutesRefreshAndLogout(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	store := repository.NewMemoryStore()
+	r := New(Dependencies{
+		AppName:      "test",
+		Env:          "test",
+		TokenManager: auth.NewManager("test-secret", time.Hour),
+		UserService:  service.NewUserService(store),
+		TaskService:  service.NewTaskService(store, store),
+	})
+
+	token := registerAndLogin(t, r.Engine(), "Alice", "alice@example.com")
+	rec := performRequest(r.Engine(), http.MethodPost, "/api/v1/auth/refresh", "", token)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("refresh token: %d: %s", rec.Code, rec.Body.String())
+	}
+	refreshed := extractToken(rec.Body.String())
+	if refreshed == "" || refreshed == token {
+		t.Fatalf("expected new token, got %s", rec.Body.String())
+	}
+
+	rec = performRequest(r.Engine(), http.MethodGet, "/api/v1/me", "", token)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected rotated token to be rejected, got %d: %s", rec.Code, rec.Body.String())
+	}
+	rec = performRequest(r.Engine(), http.MethodPost, "/api/v1/auth/logout", "", refreshed)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("logout: %d: %s", rec.Code, rec.Body.String())
+	}
+	rec = performRequest(r.Engine(), http.MethodGet, "/api/v1/me", "", refreshed)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected logged out token to be rejected, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestEnterpriseRoutesCurrentUserOwnershipAndPagination(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

@@ -88,6 +88,34 @@ paths:
           $ref: '#/components/responses/InvalidInput'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/auth/refresh:
+    post:
+      tags: [认证]
+      summary: 轮换当前有效 JWT
+      description: 当前 Token 会立即吊销，并返回新的 Token。
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 轮换成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/auth/logout:
+    post:
+      tags: [认证]
+      summary: 吊销当前 JWT
+      description: 吊销列表默认保存在内存，服务重启后会清空。
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 退出成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/v1/me:
     get:
       tags: [用户]
@@ -319,6 +347,15 @@ components:
           properties:
             token: { type: string, description: HS256 JWT }
             user: { $ref: '#/components/schemas/User' }
+    TokenResponse:
+      type: object
+      properties:
+        code: { type: integer, example: 0 }
+        message: { type: string, example: ok }
+        data:
+          type: object
+          properties:
+            token: { type: string, description: 轮换后的 HS256 JWT }
     UserPageResponse:
       type: object
       properties:

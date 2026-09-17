@@ -34,11 +34,12 @@
   server 调用测试。
 - 已完成企业骨架业务可用性：当前用户资料、任务归属隔离、用户与任务分页、稳定业务错误码。
 - 已完成企业骨架外部基础设施适配：可选 Redis 用户资料缓存、RabbitMQ 任务事件和实时依赖健康检查；默认关闭，不影响本地运行。
-- 已完成企业骨架认证与权限：bcrypt 密码摘要、HS256 JWT、管理员角色控制和内存审计记录。
+- 已完成企业骨架认证与权限：bcrypt 密码摘要、HS256 JWT、管理员角色控制、Token 轮换与内存吊销、内存审计记录。
 - 已完成审计记录管理端查询：新增仅管理员可访问的分页接口，并保留内存实现作为默认运行模式。
 - 已完成审计记录 MySQL 持久化：GORM 自动迁移审计表，默认集成测试继续按环境变量控制是否连接外部服务。
 - 已补充企业骨架 OpenAPI 接口契约与 MySQL、Redis、RabbitMQ 的 Docker Compose 本地依赖编排。
 - 已补充可选 MySQL 仓储集成测试和 GitHub Actions 完整检查工作流。
+- 已补充可选 Redis、RabbitMQ 端到端集成测试，默认跳过；显式开启后分别验证缓存读写删除与事件发布读取。
 - 已通过根模块回归：
 
 ```powershell
@@ -151,7 +152,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 | 列表分页 | 用户列表、任务列表支持 `page`、`page_size` | 已完成 |
 | 统一错误码 | 业务错误码与 HTTP 状态码分离 | 已完成 |
 
-已完成 roadmap 的“第二阶段：外部基础设施”，当前进入认证与权限阶段。
+已完成 roadmap 的“第二阶段：外部基础设施”“第三阶段：认证与权限”及后续审计、Token 轮换阶段。
 
 ## 第五阶段：示例能力拓展（可选）
 
@@ -164,8 +165,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 
 ## 推荐推进顺序
 
-1. **下一步**：评估 JWT 刷新、吊销或统一认证中心。
-2. **后续**：补充 Redis、RabbitMQ 的可选端到端集成测试。
+1. **下一步**：根据多服务场景将内存 Token 吊销列表替换为 Redis 或统一认证中心。
+2. **后续**：将 Redis、RabbitMQ 集成测试纳入具备外部依赖的 CI 环境。
 
 ## 约束
 

@@ -50,8 +50,42 @@ func TestTokenGenerateAndParse(t *testing.T) {
 	if claims.Role != domain.UserRoleAdmin {
 		t.Fatalf("expected admin role, got %s", claims.Role)
 	}
+	if claims.TokenID == "" {
+		t.Fatal("expected JWT token ID")
+	}
 	if len(strings.Split(token, ".")) != 3 {
 		t.Fatalf("expected JWT with three parts, got %s", token)
+	}
+}
+
+func TestTokenRefreshAndRevoke(t *testing.T) {
+	manager := NewManager("test-secret", time.Hour)
+	token, err := manager.Generate(7)
+	if err != nil {
+		t.Fatalf("generate token: %v", err)
+	}
+	claims, err := manager.Parse(token)
+	if err != nil {
+		t.Fatalf("parse token: %v", err)
+	}
+
+	refreshed, err := manager.Refresh(claims)
+	if err != nil {
+		t.Fatalf("refresh token: %v", err)
+	}
+	if refreshed == token {
+		t.Fatal("expected refreshed token to differ")
+	}
+	if _, err := manager.Parse(token); !errors.Is(err, ErrRevokedToken) {
+		t.Fatalf("expected revoked old token, got %v", err)
+	}
+	refreshedClaims, err := manager.Parse(refreshed)
+	if err != nil {
+		t.Fatalf("parse refreshed token: %v", err)
+	}
+	manager.Revoke(refreshedClaims)
+	if _, err := manager.Parse(refreshed); !errors.Is(err, ErrRevokedToken) {
+		t.Fatalf("expected revoked refreshed token, got %v", err)
 	}
 }
 

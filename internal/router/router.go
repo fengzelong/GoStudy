@@ -67,6 +67,8 @@ func (r *Router) register() {
 		protected := api.Group("")
 		protected.Use(middleware.Auth(r.deps.TokenManager))
 		{
+			protected.POST("/auth/refresh", r.refresh)
+			protected.POST("/auth/logout", r.logout)
 			protected.GET("/me", r.getCurrentUser)
 			protected.GET("/users", middleware.RequireRole(domain.UserRoleAdmin), r.listUsers)
 			protected.GET("/audits", middleware.RequireRole(domain.UserRoleAdmin), r.listAudits)
@@ -79,6 +81,22 @@ func (r *Router) register() {
 	r.engine.NoRoute(func(c *gin.Context) {
 		response.Error(c, http.StatusNotFound, "route not found")
 	})
+}
+
+// refresh 轮换当前有效 Token，旧 Token 会立即失效。
+func (r *Router) refresh(c *gin.Context) {
+	token, err := r.deps.TokenManager.Refresh(currentClaims(c))
+	if err != nil {
+		writeServiceError(c, err)
+		return
+	}
+	response.OK(c, gin.H{"token": token})
+}
+
+// logout 吊销当前 Token；默认内存吊销记录会随服务重启清空。
+func (r *Router) logout(c *gin.Context) {
+	r.deps.TokenManager.Revoke(currentClaims(c))
+	response.OK(c, gin.H{})
 }
 
 // getCurrentUser 返回当前认证用户的资料。
@@ -226,6 +244,12 @@ func currentUserID(c *gin.Context) int64 {
 	userID, _ := c.Get(middleware.UserIDKey)
 	id, _ := userID.(int64)
 	return id
+}
+
+func currentClaims(c *gin.Context) auth.Claims {
+	value, _ := c.Get(middleware.TokenClaimsKey)
+	claims, _ := value.(auth.Claims)
+	return claims
 }
 
 func pageInput(c *gin.Context) (service.PageInput, bool) {
